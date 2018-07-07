@@ -10,11 +10,11 @@ This software depends on several libraries to work. Most of them are included as
 
 My code is licensed with the GPL-3 license, however, I'm not relicensing any part of the code that does not belong to me. I'm including a LICENSE file inside every subfolder that does not belong to my code and I'm including the license here in the root as well. I'm not a lawyer so if I'm doing something wrong, please let me know and I'll correct it.
 
-* [SDL-CS]([https://github.com/flibitijibibo/SDL2-CS](https://github.com/flibitijibibo/SDL2-CS)) 
-* [Chromium Embedded Framework]([https://bitbucket.org/chromiumembedded/cef](https://bitbucket.org/chromiumembedded/cef))
-* [Xt-Audio]([https://sjoerdvankreel.github.io/xt-audio/](https://sjoerdvankreel.github.io/xt-audio/))
-* [SDL]([https://www.libsdl.org/](https://www.libsdl.org/))
-* [libsndfile]([http://www.mega-nerd.com/libsndfile/](http://www.mega-nerd.com/libsndfile/))
-* [Secret Rabbit Code]([http://www.mega-nerd.com/SRC/index.html](http://www.mega-nerd.com/SRC/index.html))
+* [SDL-CS](https://github.com/flibitijibibo/SDL2-CS) 
+* [Chromium Embedded Framework](https://bitbucket.org/chromiumembedded/cef)
+* [Xt-Audio](https://sjoerdvankreel.github.io/xt-audio/)
+* [SDL](https://www.libsdl.org/)
+* [libsndfile](http://www.mega-nerd.com/libsndfile/)
+* [Secret Rabbit Code](http://www.mega-nerd.com/SRC/index.html)
 
 SDL and CEF have many binary dependencies that are included here as well. Please read the respective license files for more information.
