@@ -1,10 +1,12 @@
-# RetroLite
+RetroLite
+=
 
 This is a libretro frontend implementation. I'm not trying to compete with RetroArch, but I would like to try
 some things that most likely will never be part of said project. RetroArch is excellent at what it does and if
 that works for you, then use it. I'll populate this as I work on the project and add features.
 
-# Software used
+Software used
+=
 
 This software depends on several libraries to work. Most of them are included as LFS files in order to make it
 simple to work with this. I include the list below with links to their respective websites. I don't own any of them
