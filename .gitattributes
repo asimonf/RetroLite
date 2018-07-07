@@ -1,0 +1,2 @@
+dependencies/windows/**/*.* filter=lfs diff=lfs merge=lfs -text
+dependencies/unix/**/*.* filter=lfs diff=lfs merge=lfs -text
