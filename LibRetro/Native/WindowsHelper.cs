@@ -18,7 +18,7 @@ namespace LibRetro.Native
             return LoadLibrary(fileName);
         }
 
-        int IHelper.sprintf(out string buffer, string format, params IntPtr[] args)
+        int IHelper.Sprintf(out string buffer, string format, params IntPtr[] args)
         {
             var tmpBuffer = new StringBuilder(
                     _scprintf(

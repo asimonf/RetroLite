@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using LibRetro.Types;
@@ -7,28 +8,29 @@ using LibRetro.Types;
 namespace LibRetro
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct RetroVfsFileHandle {
+    public struct RetroVfsFileHandle
+    {
         public readonly IntPtr handle;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.LPStr)]
-    public  delegate string RetroVfsGetPath(ref RetroVfsFileHandle stream);
+    public delegate string RetroVfsGetPath(ref RetroVfsFileHandle stream);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public  delegate IntPtr RetroVfsOpen([MarshalAs(UnmanagedType.LPStr)] string path, uint mode, uint hints);
+    public delegate IntPtr RetroVfsOpen([MarshalAs(UnmanagedType.LPStr)] string path, uint mode, uint hints);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public  delegate int RetroVfsClose(ref RetroVfsFileHandle stream);
+    public delegate int RetroVfsClose(ref RetroVfsFileHandle stream);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public  delegate long RetroVfsSize(ref RetroVfsFileHandle stream);
+    public delegate long RetroVfsSize(ref RetroVfsFileHandle stream);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public  delegate long RetroVfsTell(ref RetroVfsFileHandle stream);
+    public delegate long RetroVfsTell(ref RetroVfsFileHandle stream);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public  delegate long RetroVfsSeek(ref RetroVfsFileHandle stream, long offset, int seek);
+    public delegate long RetroVfsSeek(ref RetroVfsFileHandle stream, long offset, int seek);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate long RetroVfsRead(ref RetroVfsFileHandle stream, IntPtr s, ulong len);
@@ -43,7 +45,8 @@ namespace LibRetro
     public delegate int RetroVfsRemove([MarshalAs(UnmanagedType.LPStr)] string path);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int RetroVfsRename([MarshalAs(UnmanagedType.LPStr)] string oldPath, [MarshalAs(UnmanagedType.LPStr)] string newPath);
+    public delegate int RetroVfsRename([MarshalAs(UnmanagedType.LPStr)] string oldPath,
+        [MarshalAs(UnmanagedType.LPStr)] string newPath);
 
     public class RetroVfs : IDisposable
     {
@@ -80,19 +83,21 @@ namespace LibRetro
 
         public IntPtr GetInterfacePtr()
         {
-            var iface = new RetroVfsInterface();
-            
-            iface.GetPath = Marshal.GetFunctionPointerForDelegate(_getPathCallback);
-            iface.Open = Marshal.GetFunctionPointerForDelegate(_openCallback);
-            iface.Close = Marshal.GetFunctionPointerForDelegate(_closeCallback);
-            iface.Size = Marshal.GetFunctionPointerForDelegate(_sizeCallback);
-            iface.Tell = Marshal.GetFunctionPointerForDelegate(_tellCallback);
-            iface.Seek = Marshal.GetFunctionPointerForDelegate(_seekCallback);
-            iface.Read = Marshal.GetFunctionPointerForDelegate(_readCallback);
-            iface.Write = Marshal.GetFunctionPointerForDelegate(_writeCallback);
-            iface.Flush = Marshal.GetFunctionPointerForDelegate(_flushCallback);
-            iface.Remove = Marshal.GetFunctionPointerForDelegate(_removeCallback);
-            iface.Rename = Marshal.GetFunctionPointerForDelegate(_renameCallback);
+            var iface = new RetroVfsInterface
+            {
+                GetPath = Marshal.GetFunctionPointerForDelegate(_getPathCallback),
+                Open = Marshal.GetFunctionPointerForDelegate(_openCallback),
+                Close = Marshal.GetFunctionPointerForDelegate(_closeCallback),
+                Size = Marshal.GetFunctionPointerForDelegate(_sizeCallback),
+                Tell = Marshal.GetFunctionPointerForDelegate(_tellCallback),
+                Seek = Marshal.GetFunctionPointerForDelegate(_seekCallback),
+                Read = Marshal.GetFunctionPointerForDelegate(_readCallback),
+                Write = Marshal.GetFunctionPointerForDelegate(_writeCallback),
+                Flush = Marshal.GetFunctionPointerForDelegate(_flushCallback),
+                Remove = Marshal.GetFunctionPointerForDelegate(_removeCallback),
+                Rename = Marshal.GetFunctionPointerForDelegate(_renameCallback)
+            };
+
 
             var ret = Marshal.AllocHGlobal(Marshal.SizeOf(iface));
             Marshal.StructureToPtr(iface, ret, false);
@@ -112,10 +117,12 @@ namespace LibRetro
             if ((mode & Constants.RetroVfsFileAccessUpdateExisting) == Constants.RetroVfsFileAccessUpdateExisting)
             {
                 fileMode = FileMode.Append;
-            } else if ((mode & Constants.RetroVfsFileAccessReadWrite) == Constants.RetroVfsFileAccessReadWrite)
+            }
+            else if ((mode & Constants.RetroVfsFileAccessReadWrite) == Constants.RetroVfsFileAccessReadWrite)
             {
                 fileMode = FileMode.Create;
-            } else
+            }
+            else
             {
                 fileMode = FileMode.Open;
             }
@@ -124,11 +131,14 @@ namespace LibRetro
             {
                 var stream = File.Open(path, fileMode);
 
+                Debug.Assert(stream.SafeFileHandle != null, "stream.SafeFileHandle != null");
+                
                 var hPtr = stream.SafeFileHandle.DangerousGetHandle();
                 _fileDictionary.Add(hPtr, stream);
 
                 return hPtr;
-            } catch
+            }
+            catch
             {
                 return IntPtr.Zero;
             }
@@ -151,10 +161,12 @@ namespace LibRetro
                     {
                         return -1;
                     }
+
                     fileStream.Close();
                     return 0;
                 }
-            } catch
+            }
+            catch
             {
                 return -1;
             }
@@ -195,7 +207,7 @@ namespace LibRetro
 
             SeekOrigin seekOrigin;
 
-            switch(seek)
+            switch (seek)
             {
                 case 0:
                     seekOrigin = SeekOrigin.Begin;
@@ -225,7 +237,7 @@ namespace LibRetro
             var data = new byte[len];
             var fileStream = _fileDictionary[hPtr];
 
-            var res = fileStream.Read(data, 0, (int)len);
+            var res = fileStream.Read(data, 0, (int) len);
             Marshal.Copy(data, 0, s, data.Length);
 
             return res;
@@ -241,11 +253,11 @@ namespace LibRetro
             }
 
             var data = new byte[len];
-            Marshal.Copy(s, data, 0, (int)len);
+            Marshal.Copy(s, data, 0, (int) len);
 
-            _fileDictionary[hPtr].Write(data, 0, (int)len);
+            _fileDictionary[hPtr].Write(data, 0, (int) len);
 
-            return (int)len;
+            return (int) len;
         }
 
         private int Flush(ref RetroVfsFileHandle stream)
@@ -268,12 +280,15 @@ namespace LibRetro
             {
                 File.Delete(path);
                 return 0;
-            } catch {
+            }
+            catch
+            {
                 return -1;
             }
         }
 
-        private int Rename([MarshalAs(UnmanagedType.LPStr)] string oldPath, [MarshalAs(UnmanagedType.LPStr)] string newPath)
+        private int Rename([MarshalAs(UnmanagedType.LPStr)] string oldPath,
+            [MarshalAs(UnmanagedType.LPStr)] string newPath)
         {
             try
             {
@@ -293,9 +308,10 @@ namespace LibRetro
                 try
                 {
                     stream.Dispose();
-                } catch (Exception)
+                }
+                catch (Exception)
                 {
-                    continue;
+                    // ignored
                 }
             }
         }

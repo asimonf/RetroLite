@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Text;
 
 namespace LibRetro.Native
 {
-    interface IHelper
+    internal interface IHelper
     {
         IntPtr LoadLibrary(string fileName);
         void FreeLibrary(IntPtr handle);
         IntPtr GetProcAddress(IntPtr dllHandle, string name);
         
-        int sprintf(
+        int Sprintf(
             out string buffer,
             string format,
             params IntPtr[] args);

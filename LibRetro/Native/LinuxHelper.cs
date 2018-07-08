@@ -7,7 +7,7 @@ namespace LibRetro.Native
     class LinuxHelper : IHelper
     {
         public IntPtr LoadLibrary(string fileName) {
-            return dlopen(fileName, RTLD_NOW);
+            return dlopen(fileName, RtldNow);
         }
 
         public void FreeLibrary(IntPtr handle) {
@@ -25,7 +25,7 @@ namespace LibRetro.Native
             return res;
         }
         
-        public int sprintf(out string buffer, string format, params IntPtr[] args)
+        public int Sprintf(out string buffer, string format, params IntPtr[] args)
         {
             if (args.Length > 12)
             {
@@ -79,18 +79,18 @@ namespace LibRetro.Native
             return tmpBuffer.Capacity;
         }
 
-        const int RTLD_NOW = 2;
+        private const int RtldNow = 2;
 
-        [DllImport("libdl.so")]
-        private static extern IntPtr dlopen(String fileName, int flags);
+        [DllImport("libdl.so", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr dlopen(string fileName, int flags);
         
-        [DllImport("libdl.so")]
-        private static extern IntPtr dlsym(IntPtr handle, String symbol);
+        [DllImport("libdl.so", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr dlsym(IntPtr handle, string symbol);
 
-        [DllImport("libdl.so")]
+        [DllImport("libdl.so", CallingConvention = CallingConvention.Cdecl)]
         private static extern int dlclose(IntPtr handle);
 
-        [DllImport("libdl.so")]
+        [DllImport("libdl.so", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr dlerror();
         
         [DllImport("libc.so", CallingConvention = CallingConvention.Cdecl)]

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace LibRetro.Native
@@ -7,7 +6,7 @@ namespace LibRetro.Native
     public static class NativeHelper
     {
         private static readonly IHelper PlatformHelper = 
-            IsLinux() ? (IHelper)(new LinuxHelper()) : (IHelper)(new WindowsHelper());
+            IsLinux() ? (new LinuxHelper()) : (IHelper)(new WindowsHelper());
         
         private static readonly Regex ArgumentsRegex = 
             new Regex(@"%(?:\d+\$)?[+-]?(?:[ 0]|'.{1})?-?\d*(?:\.\d+)?([bcdeEufFgGosxX])", RegexOptions.Compiled);
@@ -27,9 +26,9 @@ namespace LibRetro.Native
             return PlatformHelper.GetProcAddress(dllHandle, name);
         }
 
-        public static int sprintf(out string buffer, string format, params IntPtr[] args)
+        public static int Sprintf(out string buffer, string format, params IntPtr[] args)
         {
-            return PlatformHelper.sprintf(out buffer, format, args);
+            return PlatformHelper.Sprintf(out buffer, format, args);
         }
 
         public static int GetFormatArgumentCount(string format)

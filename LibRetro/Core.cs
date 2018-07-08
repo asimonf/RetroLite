@@ -3,8 +3,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using LibRetro.Types;
 using System.Collections.Generic;
-using System.Data.Odbc;
-using System.Text;
 using LibRetro.Native;
 
 namespace LibRetro
@@ -181,7 +179,7 @@ namespace LibRetro
 
             if (_pDll == IntPtr.Zero)
             {
-                throw new Exception($"Error loading the core library");
+                throw new Exception("Error loading the core library");
             }
 
             _retroSetEnvironment = LoadFunction<RetroSetEnvironment>("retro_set_environment");
@@ -274,7 +272,7 @@ namespace LibRetro
 
         private T LoadFunction<T>(string functionName)
         {
-            var pAddressOfFunctionToCall = NativeHelper.GetProcAddress(this._pDll, functionName);
+            var pAddressOfFunctionToCall = NativeHelper.GetProcAddress(_pDll, functionName);
 
             if (pAddressOfFunctionToCall != IntPtr.Zero)
                 return Marshal.GetDelegateForFunctionPointer<T>(pAddressOfFunctionToCall);
@@ -290,7 +288,7 @@ namespace LibRetro
                 handle.Free();
             }
             _delegateHandles.Clear();
-            NativeHelper.FreeLibrary(this._pDll);
+            NativeHelper.FreeLibrary(_pDll);
         }
 
         private void _retroLogCallback(RetroLogLevel level, string format,
@@ -318,7 +316,7 @@ namespace LibRetro
                 );
             }
 
-            NativeHelper.sprintf(
+            NativeHelper.Sprintf(
                 out var formattedData, 
                 format,
                 argumentsToPush >= 1 ? arg1 : IntPtr.Zero,

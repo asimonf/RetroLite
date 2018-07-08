@@ -3,7 +3,7 @@
 namespace LibRetro.Types
 {
     [Flags]
-    public enum RetroMod : int
+    public enum RetroMod
     {
         None = 0x0000,
 

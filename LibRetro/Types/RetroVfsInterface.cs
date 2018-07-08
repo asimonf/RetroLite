@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace LibRetro.Types
 {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct RetroVfsInterface
+    public struct RetroVfsInterface
     {
         public IntPtr GetPath;
         public IntPtr Open;
