@@ -2,7 +2,7 @@
 
 namespace RetroLite.Menu
 {
-    internal class MenuCefApp : CefApp
+    public class MenuCefApp : CefApp
     {
         
     }

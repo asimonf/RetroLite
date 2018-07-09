@@ -3,13 +3,13 @@ using Xilium.CefGlue;
 
 namespace RetroLite.Menu
 {
-    internal class MenuBrowserClient : CefClient
+    public class MenuBrowserClient : CefClient
     {
         private readonly MenuRenderer _renderer;
 
-        public MenuBrowserClient(SceneManager manager)
+        public MenuBrowserClient(MenuRenderer menuRenderer)
         {
-            _renderer = new MenuRenderer(manager);
+            _renderer = menuRenderer;
         }
 
         protected override CefRenderHandler GetRenderHandler()
@@ -17,10 +17,9 @@ namespace RetroLite.Menu
             return _renderer;
         }
 
-        protected override void Dispose(bool disposing)
+        public void Draw()
         {
-            _renderer.Dispose();
-            base.Dispose(disposing);
+            _renderer.Draw();
         }
     }
 }

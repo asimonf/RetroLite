@@ -5,9 +5,6 @@ namespace RetroLite.Video
 {
     public interface IRenderer
     {
-        void Init();
-        void Cleanup();
-
         int GetWidth();
         int GetHeight();
 
@@ -15,7 +12,12 @@ namespace RetroLite.Video
         IntPtr CreateTexture(uint format, SDL.SDL_TextureAccess access, int width, int height);
         int LockTexture(
             IntPtr texture,
-            in SDL.SDL_Rect? rect,
+            ref SDL.SDL_Rect rect,
+            out IntPtr pixels,
+            out int pitch
+        );
+        int LockTexture(
+            IntPtr texture,
             out IntPtr pixels,
             out int pitch
         );
@@ -26,7 +28,10 @@ namespace RetroLite.Video
         void SetRenderDrawColor(byte r, byte b, byte g, byte a);
 
         void RenderClear();
-        void RenderCopy(IntPtr texture, in SDL.SDL_Rect? src, in SDL.SDL_Rect? dest);
+        void RenderCopy(IntPtr texture);
+        void RenderCopy(IntPtr texture, ref SDL.SDL_Rect src, ref SDL.SDL_Rect dest);
+        void RenderCopyDest(IntPtr texture, ref SDL.SDL_Rect dest);
+        void RenderCopySrc(IntPtr texture, ref SDL.SDL_Rect src);
         void RenderPresent();
     }
 }

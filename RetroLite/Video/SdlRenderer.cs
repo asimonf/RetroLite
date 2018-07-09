@@ -16,23 +16,14 @@ namespace RetroLite.Video
         {
             _width = width;
             _height = height;
-        }
-
-        public void Init()
-        {
-            if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) != 0)
-            {
-                Console.WriteLine("Init error");
-                throw new Exception("SDL Video Initialization error");
-            }
             
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
-                _height, 
                 _width, 
-                SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE
+                _height, 
+                SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS
             );
 
             if (_sdlWindow == null)
@@ -42,7 +33,9 @@ namespace RetroLite.Video
 
             _framebuffer = SDL.SDL_GetWindowSurface(_sdlWindow);
             _sdlRenderer = SDL.SDL_CreateRenderer(_sdlWindow, -1,
-                SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED | SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC);
+                SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
+                SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC |
+                SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE);
 
             if (_sdlRenderer == null)
             {
@@ -50,13 +43,14 @@ namespace RetroLite.Video
             }
         }
 
-        public void Cleanup()
+        ~SdlRenderer()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
             SDL.SDL_DestroyWindow(_sdlWindow);
 
             _sdlRenderer = IntPtr.Zero;
             _sdlWindow = IntPtr.Zero;
+            _framebuffer = IntPtr.Zero;
         }
 
         public int GetWidth()
@@ -79,9 +73,14 @@ namespace RetroLite.Video
             return SDL.SDL_CreateTexture(_sdlRenderer, format, (int)access, width, height);
         }
 
-        public int LockTexture(IntPtr texture, in SDL.SDL_Rect? rect, out IntPtr pixels, out int pitch)
+        public int LockTexture(IntPtr texture, ref SDL.SDL_Rect rect, out IntPtr pixels, out int pitch)
         {
-            return SDL.SDL_LockTexture(_sdlRenderer, in rect, out pixels, out pitch);
+            return SDL.SDL_LockTexture(texture, ref rect, out pixels, out pitch);
+        }
+
+        public int LockTexture(IntPtr texture, out IntPtr pixels, out int pitch)
+        {
+            return SDL.SDL_LockTexture(texture, IntPtr.Zero, out pixels, out pitch);
         }
 
         public void UnlockTexture(IntPtr texture)
@@ -109,9 +108,24 @@ namespace RetroLite.Video
             SDL.SDL_RenderClear(_sdlRenderer);
         }
 
-        public void RenderCopy(IntPtr texture, in SDL.SDL_Rect? src, in SDL.SDL_Rect? dest)
+        public void RenderCopy(IntPtr texture, ref SDL.SDL_Rect src, ref SDL.SDL_Rect dest)
         {
-            SDL.SDL_RenderCopy(_sdlRenderer, texture, in src, in dest);
+            SDL.SDL_RenderCopy(_sdlRenderer, texture, ref src, ref dest);
+        }
+
+        public void RenderCopyDest(IntPtr texture, ref SDL.SDL_Rect dest)
+        {
+            SDL.SDL_RenderCopy(_sdlRenderer, texture, IntPtr.Zero, ref dest);
+        }
+
+        public void RenderCopySrc(IntPtr texture, ref SDL.SDL_Rect src)
+        {
+            SDL.SDL_RenderCopy(_sdlRenderer, texture, ref src, IntPtr.Zero);
+        }
+
+        public void RenderCopy(IntPtr texture)
+        {
+            SDL.SDL_RenderCopy(_sdlRenderer, texture, IntPtr.Zero, IntPtr.Zero);
         }
 
         public void RenderPresent()

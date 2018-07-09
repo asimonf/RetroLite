@@ -2,7 +2,7 @@
 {
     public interface IScene
     {
-        void Init(SceneManager manager);
+        void Init();
         void Cleanup();
 
         void Pause();

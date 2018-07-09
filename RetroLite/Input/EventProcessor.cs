@@ -9,28 +9,17 @@ namespace RetroLite.Input
     {
         public const int MaxPorts = 4;
 
-        private readonly Dictionary<int, GameController> _gameControllersByID;
-        private GameController[] _ports;
+        private readonly Dictionary<int, GameController> _gameControllersById;
+        private readonly GameController[] _ports;
         private int _lastFreePort = 0;
-        private readonly SceneManager _manager;
 
         public GameController this[int port] => _ports[port];
 
-        public EventProcessor(SceneManager manager)
+        public EventProcessor()
         {
-            _gameControllersByID = new Dictionary<int, GameController>();
+            _gameControllersById = new Dictionary<int, GameController>();
             _ports = new GameController[MaxPorts];
             _ports[0] = new GameController();
-            _manager = manager;
-        }
-
-        public void Init()
-        {
-            if (SDL.SDL_Init(SDL.SDL_INIT_GAMECONTROLLER) != 0)
-            {
-                Console.WriteLine("Game Controller Init error");
-                throw new Exception("SDL Game Controller Initialization error");
-            }
             
             var joystickCount = SDL.SDL_NumJoysticks();
 
@@ -43,20 +32,19 @@ namespace RetroLite.Input
 
                 var controller = new GameController();
                 controller.InitializeAsJoystick(i);
-                _gameControllersByID.Add(controller.ID, controller);
+                _gameControllersById.Add(controller.ID, controller);
                 _assignGameControllerToPort(controller);
             }
         }
 
-        public void Cleanup()
+        ~EventProcessor()
         {
-            foreach (var controller in _gameControllersByID.Values)
+            foreach (var controller in _gameControllersById.Values)
             {
                 controller.Dispose();
             }
 
-            _gameControllersByID.Clear();
-            _ports = new GameController[MaxPorts];
+            _gameControllersById.Clear();
         }
 
         private void _assignGameControllerToPort(GameController controller)
@@ -88,9 +76,9 @@ namespace RetroLite.Input
                         gameController = _lastFreePort > 0 ? new GameController() : _ports[_lastFreePort++];
 
                         gameController.InitializeAsJoystick(e.cdevice.which);
-                        if (!_gameControllersByID.ContainsKey(gameController.ID))
+                        if (!_gameControllersById.ContainsKey(gameController.ID))
                         {
-                            _gameControllersByID.Add(gameController.ID, gameController);
+                            _gameControllersById.Add(gameController.ID, gameController);
                             _assignGameControllerToPort(gameController);
                         }
                         break;
@@ -98,8 +86,8 @@ namespace RetroLite.Input
                     
                     case SDL.SDL_EventType.SDL_CONTROLLERDEVICEREMOVED:
                     {
-                        var gameController = _gameControllersByID[e.cdevice.which];
-                        _gameControllersByID.Remove(e.cdevice.which);
+                        var gameController = _gameControllersById[e.cdevice.which];
+                        _gameControllersById.Remove(e.cdevice.which);
                         gameController.Dispose();
 
                         for (var i = 0; i < _ports.Length; i++)
@@ -115,10 +103,10 @@ namespace RetroLite.Input
                     }
                     case SDL.SDL_EventType.SDL_CONTROLLERBUTTONDOWN:
                     case SDL.SDL_EventType.SDL_CONTROLLERBUTTONUP:
-                        _gameControllersByID[e.cbutton.which].ProcessButtonEvent(e.cbutton);
+                        _gameControllersById[e.cbutton.which].ProcessButtonEvent(e.cbutton);
                         break;
                     case SDL.SDL_EventType.SDL_CONTROLLERAXISMOTION:
-                        _gameControllersByID[e.caxis.which].ProcessAxisEvent(e.caxis);
+                        _gameControllersById[e.caxis.which].ProcessAxisEvent(e.caxis);
                         break;
                     case SDL.SDL_EventType.SDL_KEYDOWN:
                     case SDL.SDL_EventType.SDL_KEYUP:
@@ -126,7 +114,6 @@ namespace RetroLite.Input
                         break;
                     //User requests quit
                     case SDL.SDL_EventType.SDL_QUIT:
-                        _manager.Running = false;
                         break;
                 }
             }

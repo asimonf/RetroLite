@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using RetroLite.Input;
 using RetroLite.Video;
+using Xilium.CefGlue;
 
 namespace RetroLite.Scene
 {
@@ -10,27 +11,20 @@ namespace RetroLite.Scene
     {
         private readonly Stack<IScene> _scenes;
 
-        public IRenderer Renderer { get; private set; }
-        public EventProcessor EventProcessor { get; private set; }
+        private readonly IRenderer _renderer;
+        private readonly EventProcessor _eventProcessor;
 
-        public int Height => Renderer.GetHeight();
-        public int Width => Renderer.GetWidth();
+        public int Height => _renderer.GetHeight();
+        public int Width => _renderer.GetWidth();
 
         public bool Running { get; set; } = false;
-
-        public SceneManager()
+        
+        public SceneManager(IRenderer renderer, EventProcessor eventProcessor)
         {
+            _renderer = renderer;
+            _eventProcessor = eventProcessor;
+            
             _scenes = new Stack<IScene>();
-            EventProcessor = new EventProcessor(this);
-            Renderer = new SdlRenderer(1024, 768);
-        }
-
-        public void Init()
-        {
-            Running = true;
-
-            EventProcessor.Init();
-            Renderer.Init();
         }
 
         public void Cleanup()
@@ -39,41 +33,36 @@ namespace RetroLite.Scene
             {
                 _scenes.Pop().Cleanup();
             }
-
-            EventProcessor.Cleanup();
-            Renderer.Cleanup();
-
-            SDL_image.IMG_Quit();
-            SDL.SDL_Quit();
         }
 
         public void ChangeScene(IScene scene)
         {
-            EventProcessor.ResetControllers();
+            _eventProcessor.ResetControllers();
             if (_scenes.Count > 0)
             {
                 _scenes.Pop().Cleanup();
             }
 
             _scenes.Push(scene);
-            scene.Init(this);
+            scene.Init();
         }
 
         public void PushScene(IScene scene)
         {
-            EventProcessor.ResetControllers();
+            _eventProcessor.ResetControllers();
             if (_scenes.Count > 0)
             {
                 _scenes.Peek().Pause();
             }
 
             _scenes.Push(scene);
-            scene.Init(this);
+            scene.Init();
+            scene.Resume();
         }
 
         public void PopScene()
         {
-            EventProcessor.ResetControllers();
+            _eventProcessor.ResetControllers();
             if (_scenes.Count > 0)
             {
                 _scenes.Pop().Cleanup();
@@ -87,7 +76,7 @@ namespace RetroLite.Scene
 
         public void HandleEvents()
         {
-            EventProcessor.HandleEvents();
+            _eventProcessor.HandleEvents();
             _scenes.Peek().HandleEvents();
         }
 
@@ -98,7 +87,10 @@ namespace RetroLite.Scene
 
         public void Draw()
         {
+            _renderer.SetRenderDrawColor(255, 0, 0, 255);
+            _renderer.RenderClear();
             _scenes.Peek().Draw();
+            _renderer.RenderPresent();
         }
     }
 }

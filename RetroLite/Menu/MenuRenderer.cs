@@ -10,49 +10,38 @@ namespace RetroLite.Menu
 {
     public class MenuRenderer : CefRenderHandler, IDisposable
     {
-        private IntPtr _texture;
-        private readonly SceneManager _manager;
-        private IRenderer Renderer => _manager.Renderer;
+        private readonly IntPtr _texture;
+        private readonly IRenderer _renderer;
 
-        public MenuRenderer(SceneManager manager)
+        public MenuRenderer(IRenderer renderer)
         {
-            _manager = manager;
-            _resize();
-        }
+            _renderer = renderer;
 
-        private void _resize()
-        {
-            if (_texture != IntPtr.Zero)
-            {
-                Renderer.FreeTexture(_texture);
-            }
+            var format = SDL.SDL_PIXELFORMAT_UNKNOWN;
 
-            var format = SDL.SDL_PIXELFORMAT_ARGB8888;
-
-            _texture = Renderer.CreateTexture(
+            _texture = _renderer.CreateTexture(
                 format,
                 SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-                Renderer.GetWidth(),
-                Renderer.GetHeight()
+                _renderer.GetWidth(),
+                _renderer.GetHeight()
             );
         }
 
         protected override bool GetViewRect(CefBrowser browser, ref CefRectangle rect)
         {
-            rect = new CefRectangle(0, 0, Renderer.GetWidth(), Renderer.GetHeight());
+            rect = new CefRectangle(0, 0, _renderer.GetWidth(), _renderer.GetHeight());
+
             return true;
         }
 
         protected override unsafe void OnPaint(CefBrowser browser, CefPaintElementType type, CefRectangle[] dirtyRects,
             IntPtr buffer, int width, int height)
         {
-            if (_texture == IntPtr.Zero) return;
-
             var length = width * height * 4;
-            
-            Renderer.LockTexture(_texture, null, out var textureData, out var texturePitch);
-            Buffer.MemoryCopy(buffer.ToPointer(), _texture.ToPointer(), length, length);
-            Renderer.UnlockTexture(_texture);
+
+            _renderer.LockTexture(_texture, out var pixels, out var pitch);
+            Buffer.MemoryCopy(buffer.ToPointer(), pixels.ToPointer(), length, length);
+            _renderer.UnlockTexture(_texture);
         }
 
         protected override CefAccessibilityHandler GetAccessibilityHandler()
@@ -80,13 +69,15 @@ namespace RetroLite.Menu
         protected override void OnImeCompositionRangeChanged(CefBrowser browser, CefRange selectedRange, CefRectangle[] characterBounds)
         {
         }
+        
+        public void Draw()
+        {
+            _renderer.RenderCopy(_texture);
+        }
 
         public void Dispose()
         {
-            if (_texture != IntPtr.Zero)
-            {
-                Renderer.FreeTexture(_texture);
-            }
+           _renderer.FreeTexture(_texture);
         }
     }
 }
