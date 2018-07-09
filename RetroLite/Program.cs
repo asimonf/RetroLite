@@ -14,12 +14,7 @@ namespace RetroLite
         [STAThread]
         public static unsafe int Main(string[] args)
         {
-            var cefMainArgs = new CefMainArgs(new string[]
-            {
-                "--disable-gpu",
-                "--disable-gpu-compositing",
-                "--enable-begin-frame-scheduling"
-            });
+            var cefMainArgs = new CefMainArgs(args);
 
             var res = CefRuntime.ExecuteProcess(cefMainArgs, null, IntPtr.Zero);
             
@@ -38,7 +33,6 @@ namespace RetroLite
                 manager.HandleEvents();
                 manager.Update();
                 manager.Draw();
-                System.Threading.Thread.Sleep(5);
             }
             
             manager.Cleanup();

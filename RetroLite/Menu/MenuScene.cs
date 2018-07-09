@@ -43,7 +43,7 @@ namespace RetroLite.Menu
             
             // Instruct CEF to not render to a window at all.
             var cefWindowInfo = CefWindowInfo.Create();
-            cefWindowInfo.SetAsWindowless(IntPtr.Zero, true);
+            cefWindowInfo.SetAsWindowless(IntPtr.Zero, false);
 
             var browserSettings = new CefBrowserSettings()
             {
@@ -53,7 +53,7 @@ namespace RetroLite.Menu
             _manager = manager;
             _eventProcessor = eventProcessor;
             _browserClient = browserClient;
-            _browser = CefBrowserHost.CreateBrowserSync(cefWindowInfo, _browserClient, browserSettings, "http://www.google.com");
+            _browser = CefBrowserHost.CreateBrowserSync(cefWindowInfo, _browserClient, browserSettings, "https://codepen.io/SoftwareRVG/pen/OXkOWj");
         }
         
         public void Init()
@@ -66,10 +66,12 @@ namespace RetroLite.Menu
 
         public void Pause()
         {
+            _browser.GetHost().WasHidden(true);
         }
 
         public void Resume()
         {
+            _browser.GetHost().WasHidden(false);
         }
 
         public void HandleEvents()
