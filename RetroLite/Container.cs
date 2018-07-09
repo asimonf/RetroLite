@@ -22,14 +22,6 @@ namespace RetroLite
 
         public Container(CefMainArgs cefMainArgs)
         {
-            Console.WriteLine("Initializing Video");
-            
-            if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_GAMECONTROLLER) != 0)
-            {
-                Console.WriteLine("Init error");
-                throw new Exception("SDL Video Initialization error");
-            }
-            
             CefMainArgs = cefMainArgs;
             MenuCefApp = new MenuCefApp();
             Renderer = new SdlRenderer(1024, 768);

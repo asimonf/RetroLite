@@ -17,6 +17,14 @@ namespace RetroLite.Video
             _width = width;
             _height = height;
             
+            Console.WriteLine("Initializing Video");
+            
+            if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) != 0)
+            {
+                Console.WriteLine("Init error");
+                throw new Exception("SDL Video Initialization error");
+            }
+            
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 

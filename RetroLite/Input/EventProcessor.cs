@@ -21,6 +21,14 @@ namespace RetroLite.Input
             _ports = new GameController[MaxPorts];
             _ports[0] = new GameController();
             
+            Console.WriteLine("Initializing Event Processor");
+            
+            if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK) != 0)
+            {
+                Console.WriteLine("Init error");
+                throw new Exception("SDL Joystick Initialization error");
+            }
+            
             var joystickCount = SDL.SDL_NumJoysticks();
 
             for (var i = 0; i < joystickCount; i++)
