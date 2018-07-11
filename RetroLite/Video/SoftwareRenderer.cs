@@ -3,47 +3,45 @@ using SDL2;
 
 namespace RetroLite.Video
 {
-    public class SdlRenderer : IRenderer
+    public class SoftwareRenderer : IRenderer
     {
-        private IntPtr _sdlWindow;
+        private IntPtr _sdlSurface;
         private IntPtr _sdlRenderer;
         private IntPtr _framebuffer;
 
         private int _height;
         private int _width;
 
-        public SdlRenderer(int width, int height)
+        public SoftwareRenderer(int width, int height)
         {
             _width = width;
             _height = height;
             
             Console.WriteLine("Initializing Video");
             
-            if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) != 0)
+            if (SDL.SDL_InitSubSystem(SDL.SDL_INIT_VIDEO) != 0)
             {
                 Console.WriteLine("Init error");
                 throw new Exception("SDL Video Initialization error");
             }
             
-            _sdlWindow = SDL.SDL_CreateWindow(
-                "RetroLite", 
-                SDL.SDL_WINDOWPOS_UNDEFINED, 
-                SDL.SDL_WINDOWPOS_UNDEFINED, 
+            _sdlSurface = SDL.SDL_CreateRGBSurface(
+                0, 
                 _width, 
                 _height, 
-                SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS
+                32,
+                0,
+                0,
+                0,
+                0
             );
 
-            if (_sdlWindow == null)
+            if (_sdlSurface == null)
             {
-                throw new Exception("SDL Window Initialization Error");
+                throw new Exception("SDL Software Surface Initialization Error");
             }
 
-            _framebuffer = SDL.SDL_GetWindowSurface(_sdlWindow);
-            _sdlRenderer = SDL.SDL_CreateRenderer(_sdlWindow, -1,
-                SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
-                SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC |
-                SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE);
+            _sdlRenderer = SDL.SDL_CreateSoftwareRenderer(_sdlSurface);
 
             if (_sdlRenderer == null)
             {
@@ -51,13 +49,12 @@ namespace RetroLite.Video
             }
         }
 
-        ~SdlRenderer()
+        ~SoftwareRenderer()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
-            SDL.SDL_DestroyWindow(_sdlWindow);
+            SDL.SDL_QuitSubSystem(SDL.SDL_INIT_VIDEO);
 
             _sdlRenderer = IntPtr.Zero;
-            _sdlWindow = IntPtr.Zero;
             _framebuffer = IntPtr.Zero;
         }
 
@@ -139,11 +136,12 @@ namespace RetroLite.Video
         public void RenderPresent()
         {
             SDL.SDL_RenderPresent(_sdlRenderer);
+            SDL.SDL_Delay(5);
         }
-        
+
         public void Screenshot()
         {
-            
+            SDL.SDL_SaveBMP(_sdlSurface, "screenshot.bmp");
         }
     }
 }

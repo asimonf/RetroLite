@@ -28,7 +28,7 @@ namespace RetroLite
         {
             CefMainArgs = cefMainArgs;
             MenuCefApp = new MenuCefApp();
-            Renderer = new SdlRenderer(1024, 768);
+            Renderer = new SoftwareRenderer(1024, 768);
             EventProcessor = new EventProcessor();
             SceneManager = new SceneManager(Renderer, EventProcessor);
             MenuRenderer = new MenuRenderer(Renderer);

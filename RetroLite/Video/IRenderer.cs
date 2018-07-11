@@ -33,5 +33,7 @@ namespace RetroLite.Video
         void RenderCopyDest(IntPtr texture, ref SDL.SDL_Rect dest);
         void RenderCopySrc(IntPtr texture, ref SDL.SDL_Rect src);
         void RenderPresent();
+
+        void Screenshot();
     }
 }

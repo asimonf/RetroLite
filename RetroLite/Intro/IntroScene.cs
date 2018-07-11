@@ -90,6 +90,7 @@ namespace RetroLite.Intro
                 return;
             }
             
+            _renderer.Screenshot();
             Program.EventBus.Publish(new IntroFinishedEvent());
         }
     }
