@@ -47,6 +47,10 @@
       <HintPath>..\packages\NLog.4.5.6\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Redbus, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Redbus.1.0.4\lib\net45\Redbus.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Specialized, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
@@ -75,6 +79,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Container.cs" />
+    <Compile Include="Event\IntroFinishedEvent.cs" />
+    <Compile Include="Event\LoadCoreEvent.cs" />
+    <Compile Include="Event\OpenMenuEvent.cs" />
     <Compile Include="RetroCore\CoreVariable.cs" />
     <Compile Include="RetroCore\InputDescriptor.cs" />
     <Compile Include="RetroCore\RetroLite.cs" />
@@ -117,20 +124,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="cores\.gitignore" />
-    <Content Include="cores\.gitkeep" />
-    <Content Include="cores\nes\nestopia_libretro.dll" />
-    <Content Include="cores\psx\mednafen_psx_libretro.dll" />
-    <Content Include="cores\snes\higan_sfc_libretro.dll" />
-    <Content Include="cores\snes\sbsnes_mercury_accuracy_libretro.dll" />
-    <Content Include="cores\snes\snes9x2010_libretro.dll" />
-    <Content Include="roms\.gitignore" />
-    <Content Include="roms\.gitkeep" />
-    <Content Include="roms\nes\240pee.nes" />
-    <Content Include="roms\nes\Super Mario Bros. 3 (USA).nes" />
-    <Content Include="roms\psx\PSXTEST.EXE" />
-    <Content Include="roms\snes\240pSuite.sfc" />
-    <Content Include="roms\snes\Super Mario World (USA).sfc" />
+    <Content Include="assets\logo.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -146,10 +140,18 @@
       <CefWindows Include="..\dependencies\windows\cef\binaries\**\*.*" />
       <SdlUnix Include="..\dependencies\unix\sdl\*.*" />
       <SdlWindows Include="..\dependencies\windows\sdl\*.*" />
+      <Assets Include=".\assets\**\*.*" />
+      <Cores Include=".\cores\**\*.*" />
+      <Roms Include=".\roms\**\*.*" />
+      <System Include=".\system\**\*.*" />
     </ItemGroup>
     <Copy Condition="'$(OS)' == 'Unix'" SourceFiles="@(CefUnix)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(OS)' == 'Unix'" SourceFiles="@(SdlUnix)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(CefWindows)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(SdlWindows)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Assets)" DestinationFolder="$(OutputPath)/assets/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Cores)" DestinationFolder="$(OutputPath)/cores/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(Roms)" DestinationFolder="$(OutputPath)/roms/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(System)" DestinationFolder="$(OutputPath)/system/%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System;
+using Redbus;
 using RetroLite.Intro;
 using RetroLite.Menu;
 using RetroLite.Scene;
@@ -11,6 +12,8 @@ namespace RetroLite
 {
     internal class Program
     {
+        public static EventBus EventBus { get; private set; }
+        
         [STAThread]
         public static unsafe int Main(string[] args)
         {
@@ -22,10 +25,12 @@ namespace RetroLite
             {
                 return res;
             }
+
+            EventBus = new EventBus();
             
             var container = new Container(cefMainArgs);
             var manager = container.SceneManager;
-            manager.ChangeScene(container.MenuScene);
+            manager.ChangeScene(container.IntroScene);
             manager.Running = true;
 
             while (container.SceneManager.Running)

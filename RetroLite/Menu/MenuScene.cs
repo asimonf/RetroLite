@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using Redbus;
+using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Scene;
 using Xilium.CefGlue;
@@ -14,6 +17,7 @@ namespace RetroLite.Menu
         private GameControllerAnalog[] _analogs;
         private int[] _buttonRepeatCounter;
         private const int RepeatFrameLimit = 30;
+        private readonly List<SubscriptionToken> _eventTokenList;
 
         private readonly CefBrowser _browser;
         private readonly MenuBrowserClient _browserClient;
@@ -33,6 +37,7 @@ namespace RetroLite.Menu
             _buttons = (GameControllerButton[]) Enum.GetValues(typeof(GameControllerButton));
             _analogs = (GameControllerAnalog[]) Enum.GetValues(typeof(GameControllerAnalog));
             _buttonRepeatCounter = new int[_buttons.Length];
+            _eventTokenList = new List<SubscriptionToken>();
             
             var settings = new CefSettings()
             {
@@ -54,6 +59,31 @@ namespace RetroLite.Menu
             _eventProcessor = eventProcessor;
             _browserClient = browserClient;
             _browser = CefBrowserHost.CreateBrowserSync(cefWindowInfo, _browserClient, browserSettings, "https://codepen.io/SoftwareRVG/pen/OXkOWj");
+
+            _eventTokenList.Add(Program.EventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
+            _eventTokenList.Add(Program.EventBus.Subscribe<IntroFinishedEvent>(OnIntroFinishedEvent));
+        }
+
+        ~MenuScene()
+        {
+            foreach (var token in _eventTokenList)
+            {
+                Program.EventBus.Unsubscribe(token);                
+            }
+            _eventTokenList.Clear();
+        }
+
+        private void OnOpenMenuEvent(OpenMenuEvent openMenuEvent)
+        {
+            if (!_manager.IsCurrentScene(this))
+            {
+                _manager.PushScene(this);
+            }
+        }
+
+        private void OnIntroFinishedEvent(IntroFinishedEvent introFinishedEvent)
+        {
+            _manager.ChangeScene(this);
         }
         
         public void Start()

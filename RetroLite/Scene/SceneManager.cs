@@ -60,6 +60,11 @@ namespace RetroLite.Scene
             scene.Resume();
         }
 
+        public bool IsCurrentScene(IScene scene)
+        {
+            return null != scene && scene == _scenes.Peek();
+        }
+
         public void PopScene()
         {
             _eventProcessor.ResetControllers();

@@ -5,7 +5,9 @@ using System.Runtime.InteropServices;
 using LibRetro;
 using LibRetro.Types;
 using NLog;
+using RetroLite.Event;
 using RetroLite.Input;
+using RetroLite.Menu;
 using RetroLite.Scene;
 using RetroLite.Video;
 using SDL2;
@@ -422,7 +424,7 @@ namespace RetroLite.RetroCore
                 // Switch to menu if guide is pressed
                 if (_eventProcessor[port].Guide)
                 {
-                    _manager.PushScene(null);
+                    Program.EventBus.Publish(new OpenMenuEvent(this));
                     break;                    
                 }
             }
