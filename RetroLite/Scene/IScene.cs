@@ -2,11 +2,10 @@
 {
     public interface IScene
     {
-        void Init();
-        void Cleanup();
-
-        void Pause();
+        void Start();
         void Resume();
+        void Pause();
+        void Stop();
 
         void HandleEvents();
         void Update();

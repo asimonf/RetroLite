@@ -31,7 +31,7 @@ namespace RetroLite.Intro
         {
         }
 
-        public void Init()
+        public void Start()
         {
             if (_initialized)
             {
@@ -64,7 +64,7 @@ namespace RetroLite.Intro
             _initialized = true;
         }
         
-        public void Cleanup()
+        public void Stop()
         {
 //            _manager.Renderer.FreeTexture(_logo);
 //            _initTask.Dispose();

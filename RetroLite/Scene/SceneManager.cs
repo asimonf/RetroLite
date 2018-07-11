@@ -31,7 +31,7 @@ namespace RetroLite.Scene
         {
             while (_scenes.Count > 0)
             {
-                _scenes.Pop().Cleanup();
+                _scenes.Pop().Stop();
             }
         }
 
@@ -40,11 +40,11 @@ namespace RetroLite.Scene
             _eventProcessor.ResetControllers();
             if (_scenes.Count > 0)
             {
-                _scenes.Pop().Cleanup();
+                _scenes.Pop().Stop();
             }
 
             _scenes.Push(scene);
-            scene.Init();
+            scene.Start();
         }
 
         public void PushScene(IScene scene)
@@ -56,7 +56,7 @@ namespace RetroLite.Scene
             }
 
             _scenes.Push(scene);
-            scene.Init();
+            scene.Start();
             scene.Resume();
         }
 
@@ -65,7 +65,7 @@ namespace RetroLite.Scene
             _eventProcessor.ResetControllers();
             if (_scenes.Count > 0)
             {
-                _scenes.Pop().Cleanup();
+                _scenes.Pop().Stop();
             }
 
             if (_scenes.Count > 0)

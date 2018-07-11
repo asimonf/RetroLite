@@ -56,11 +56,11 @@ namespace RetroLite.Menu
             _browser = CefBrowserHost.CreateBrowserSync(cefWindowInfo, _browserClient, browserSettings, "https://codepen.io/SoftwareRVG/pen/OXkOWj");
         }
         
-        public void Init()
+        public void Start()
         {
         }
 
-        public void Cleanup()
+        public void Stop()
         {
         }
 

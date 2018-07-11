@@ -75,6 +75,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Container.cs" />
+    <Compile Include="RetroCore\CoreVariable.cs" />
+    <Compile Include="RetroCore\InputDescriptor.cs" />
+    <Compile Include="RetroCore\RetroLite.cs" />
+    <Compile Include="RetroCore\RetroLiteCollection.cs" />
+    <Compile Include="RetroCore\RetroLiteEnvironment.cs" />
     <Compile Include="Input\EventProcessor.cs" />
     <Compile Include="Input\GameController.cs" />
     <Compile Include="Input\GameControllerStatus.cs" />
@@ -110,6 +115,22 @@
       <Project>{53e083f0-27a5-4898-9d10-2747cb50147b}</Project>
       <Name>SRC-CS</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="cores\.gitignore" />
+    <Content Include="cores\.gitkeep" />
+    <Content Include="cores\nes\nestopia_libretro.dll" />
+    <Content Include="cores\psx\mednafen_psx_libretro.dll" />
+    <Content Include="cores\snes\higan_sfc_libretro.dll" />
+    <Content Include="cores\snes\sbsnes_mercury_accuracy_libretro.dll" />
+    <Content Include="cores\snes\snes9x2010_libretro.dll" />
+    <Content Include="roms\.gitignore" />
+    <Content Include="roms\.gitkeep" />
+    <Content Include="roms\nes\240pee.nes" />
+    <Content Include="roms\nes\Super Mario Bros. 3 (USA).nes" />
+    <Content Include="roms\psx\PSXTEST.EXE" />
+    <Content Include="roms\snes\240pSuite.sfc" />
+    <Content Include="roms\snes\Super Mario World (USA).sfc" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
