@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using NLog.Targets;
 using Redbus;
 using RetroLite.Event;
 using RetroLite.Input;
@@ -67,12 +69,14 @@ namespace RetroLite.RetroCore
             
         }
 
-        public void LoadGame(string path)
+        public bool LoadGame(string path)
         {
+            if (!File.Exists(path)) return false;
+            
             var system = Path.GetFileNameWithoutExtension(Path.GetDirectoryName(path));
             
             // TODO: Do something here when it fails to find anything
-            if (system == null) return;
+            if (system == null) return false;
             
             var core = _coresBySystem[system][0];
 
@@ -84,6 +88,8 @@ namespace RetroLite.RetroCore
             }
 
             _currentCore = core;
+
+            return true;
         }
 
         public void Pause()
@@ -106,11 +112,14 @@ namespace RetroLite.RetroCore
         /// </summary>
         /// <param name="loadCoreEvent"></param>
         /// <exception cref="Exception"></exception>
-        public void OnLoadCoreEvent(LoadCoreEvent loadCoreEvent)
+        private void OnLoadCoreEvent(LoadCoreEvent loadCoreEvent)
         {
             string dll = loadCoreEvent.Dll, system = loadCoreEvent.System;
+            Console.WriteLine($"Loading core {dll}");
             var name = Path.GetFileNameWithoutExtension(dll);
 
+            Debug.Assert(name != null, nameof(name) + " != null");
+            
             if (_coresByName.ContainsKey(name))
             {
                 throw new Exception("Dll already loaded");
@@ -126,6 +135,7 @@ namespace RetroLite.RetroCore
                 _coresBySystem.Add(system, new List<RetroLite>());
             }
 
+            Console.WriteLine($"Core '{name}' for system '{system}' loaded.");
             _coresBySystem[system].Add(core);
         }
     }

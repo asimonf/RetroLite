@@ -104,11 +104,13 @@ namespace RetroLite.RetroCore
             _manager = manager;
             _eventProcessor = eventProcessor;
             _renderer = renderer;
+            
+            _core.RetroInit();
         }
 
         public void Start()
         {
-            _core.RetroInit();
+            
         }
 
         public void Reset()
@@ -212,18 +214,18 @@ namespace RetroLite.RetroCore
 
         private void _audioSample(short left, short right)
         {
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition] = (byte) (left & 0xFF);
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 1] = (byte) (left >> 8);
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 2] = (byte) (right & 0xFF);
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 3] = (byte) (right >> 8);
-            _temporaryAudioBufferPosition += 4;
+//            _temporaryAudioBuffer[_temporaryAudioBufferPosition] = (byte) (left & 0xFF);
+//            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 1] = (byte) (left >> 8);
+//            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 2] = (byte) (right & 0xFF);
+//            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 3] = (byte) (right >> 8);
+//            _temporaryAudioBufferPosition += 4;
         }
 
         private ulong _audioSampleBatch(IntPtr data, ulong frames)
         {
-            var size = (int) frames * 4;
-            Marshal.Copy(data, _temporaryAudioBuffer, _temporaryAudioBufferPosition, size);
-            _temporaryAudioBufferPosition += size;
+//            var size = (int) frames * 4;
+//            Marshal.Copy(data, _temporaryAudioBuffer, _temporaryAudioBufferPosition, size);
+//            _temporaryAudioBufferPosition += size;
 
             return frames;
         }
@@ -246,37 +248,37 @@ namespace RetroLite.RetroCore
                     switch ((RetroDeviceIdJoypad) id)
                     {
                         case RetroDeviceIdJoypad.A:
-                            return _eventProcessor[(int) port].B ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].B == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.B:
-                            return _eventProcessor[(int) port].A ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].A == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.DOWN:
-                            return _eventProcessor[(int) port].DpadDown ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].DpadDown == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.L:
-                            return _eventProcessor[(int) port].LeftShoulder ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].LeftShoulder == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.L2:
                             return _eventProcessor[(int) port].LeftTrigger;
                         case RetroDeviceIdJoypad.L3:
-                            return _eventProcessor[(int) port].LeftStick ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].LeftStick == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.LEFT:
-                            return _eventProcessor[(int) port].DpadLeft ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].DpadLeft == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.R:
-                            return _eventProcessor[(int) port].RightShoulder ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].RightShoulder == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.R2:
                             return _eventProcessor[(int) port].RightTrigger;
                         case RetroDeviceIdJoypad.R3:
-                            return _eventProcessor[(int) port].RightStick ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].RightStick == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.RIGHT:
-                            return _eventProcessor[(int) port].DpadRight ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].DpadRight == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.SELECT:
-                            return _eventProcessor[(int) port].Back ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].Back == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.START:
-                            return _eventProcessor[(int) port].Start ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].Start == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.UP:
-                            return _eventProcessor[(int) port].DpadUp ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].DpadUp == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.X:
-                            return _eventProcessor[(int) port].Y ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].Y == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.Y:
-                            return _eventProcessor[(int) port].X ? short.MaxValue : (short) 0;
+                            return _eventProcessor[(int) port].X == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                     }
                     break;
             }
@@ -422,7 +424,7 @@ namespace RetroLite.RetroCore
                 if (_eventProcessor[port] == null) continue;
                 
                 // Switch to menu if guide is pressed
-                if (_eventProcessor[port].Guide)
+                if (_eventProcessor[port].Guide == GameControllerButtonState.Up)
                 {
                     Program.EventBus.Publish(new OpenMenuEvent(this));
                     break;                    
@@ -535,6 +537,8 @@ namespace RetroLite.RetroCore
                 _framebufferWidth,
                 _framebufferHeight
             );
+            
+            _renderer.SetTextureBlendMode(_framebuffer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
         #endregion
 

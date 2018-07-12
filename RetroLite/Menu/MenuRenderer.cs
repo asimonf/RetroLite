@@ -17,19 +17,21 @@ namespace RetroLite.Menu
         {
             _renderer = renderer;
 
-            var format = SDL.SDL_PIXELFORMAT_UNKNOWN;
+            var format = SDL.SDL_PIXELFORMAT_ARGB8888;
 
             _texture = _renderer.CreateTexture(
                 format,
                 SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-                _renderer.GetWidth(),
-                _renderer.GetHeight()
+                _renderer.Width,
+                _renderer.Height
             );
+
+            _renderer.SetTextureBlendMode(_texture, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
 
         protected override bool GetViewRect(CefBrowser browser, ref CefRectangle rect)
         {
-            rect = new CefRectangle(0, 0, _renderer.GetWidth(), _renderer.GetHeight());
+            rect = new CefRectangle(0, 0, _renderer.Width, _renderer.Height);
 
             return true;
         }

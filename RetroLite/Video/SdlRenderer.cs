@@ -9,28 +9,20 @@ namespace RetroLite.Video
         private IntPtr _sdlRenderer;
         private IntPtr _framebuffer;
 
-        private int _height;
-        private int _width;
+        public int Height { get; }
+        public int Width { get; }
 
         public SdlRenderer(int width, int height)
         {
-            _width = width;
-            _height = height;
-            
-            Console.WriteLine("Initializing Video");
-            
-            if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) != 0)
-            {
-                Console.WriteLine("Init error");
-                throw new Exception("SDL Video Initialization error");
-            }
+            Width = width;
+            Height = height;
             
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
-                _width, 
-                _height, 
+                Width, 
+                Height, 
                 SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS
             );
 
@@ -49,26 +41,14 @@ namespace RetroLite.Video
             {
                 throw new Exception("SDL Renderer Initialization Error");
             }
+
+            SetRenderDrawBlendMode(SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
 
         ~SdlRenderer()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
             SDL.SDL_DestroyWindow(_sdlWindow);
-
-            _sdlRenderer = IntPtr.Zero;
-            _sdlWindow = IntPtr.Zero;
-            _framebuffer = IntPtr.Zero;
-        }
-
-        public int GetWidth()
-        {
-            return _width;
-        }
-
-        public int GetHeight()
-        {
-            return _height;
         }
 
         public IntPtr LoadTextureFromFile(string path)
@@ -140,7 +120,17 @@ namespace RetroLite.Video
         {
             SDL.SDL_RenderPresent(_sdlRenderer);
         }
+
+        public bool SetRenderDrawBlendMode(SDL.SDL_BlendMode mode)
+        {
+            return SDL.SDL_SetRenderDrawBlendMode(_sdlRenderer, mode) == 0;
+        }
         
+        public bool SetTextureBlendMode(IntPtr texture, SDL.SDL_BlendMode mode)
+        {
+            return SDL.SDL_SetTextureBlendMode(texture, mode) == 0;
+        }
+
         public void Screenshot()
         {
             

@@ -1,8 +1,11 @@
 ﻿using System;
 using Redbus;
+using RetroLite.Input;
 using RetroLite.Intro;
 using RetroLite.Menu;
+using RetroLite.RetroCore;
 using RetroLite.Scene;
+using RetroLite.Video;
 using SDL2;
 using SRC_CS;
 using Xilium.CefGlue;
@@ -10,40 +13,73 @@ using Xt;
 
 namespace RetroLite
 {
-    internal class Program
+    internal static class Program
     {
-        public static EventBus EventBus { get; private set; }
+        public static EventBus EventBus { get; } = new EventBus();
         
         [STAThread]
-        public static unsafe int Main(string[] args)
+        public static int Main(string[] args)
         {
             var cefMainArgs = new CefMainArgs(args);
+            var cefApp = new MenuCefApp();
 
-            var res = CefRuntime.ExecuteProcess(cefMainArgs, null, IntPtr.Zero);
+            var res = CefRuntime.ExecuteProcess(cefMainArgs, cefApp, windowsSandboxInfo: IntPtr.Zero);
             
             if (res >= 0)
             {
                 return res;
             }
 
-            EventBus = new EventBus();
-            
-            var container = new Container(cefMainArgs);
-            var manager = container.SceneManager;
-            manager.ChangeScene(container.IntroScene);
-            manager.Running = true;
-
-            while (container.SceneManager.Running)
+            SceneManager sceneManager = null;
+            try
             {
-                manager.HandleEvents();
-                manager.Update();
-                manager.Draw();
+                Console.WriteLine("Initializing SDL");
+
+                if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
+                {
+                    Console.WriteLine("SDL Init error");
+                    throw new Exception("SDL Initialization error");
+                }
+                
+                // Initialize Components
+                var eventProcessor = new EventProcessor();
+                IRenderer renderer = new SdlRenderer(1024, 768);
+                sceneManager = new SceneManager(renderer, eventProcessor);
+                var menuRenderer = new MenuRenderer(renderer);
+                var menuBrowserClient = new MenuBrowserClient(menuRenderer);
+                var retroLiteCollection = new RetroLiteCollection(sceneManager, eventProcessor, renderer);
+                var menuScene = new MenuScene(
+                    cefMainArgs, 
+                    sceneManager, 
+                    eventProcessor, 
+                    menuBrowserClient, 
+                    cefApp,
+                    retroLiteCollection);
+
+                sceneManager.ChangeScene(new IntroScene(renderer));
+                sceneManager.Running = true;
+
+                while (sceneManager.Running)
+                {
+                    sceneManager.HandleEvents();
+                    sceneManager.Update();
+                    sceneManager.Draw();
+                }
+                return 0;
             }
-            
-            manager.Cleanup();
-            container.Shutdown();
-            
-            return 0;
+            catch (Exception e)
+            {
+                Console.WriteLine("Error!!!");
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
+                return 1;
+            }
+            finally
+            {
+                sceneManager?.Cleanup();
+                SDL.SDL_Quit();                
+                CefRuntime.Shutdown();
+            }
         }
     }
 }

@@ -11,7 +11,6 @@ namespace RetroLite.Intro
 {
     public class IntroScene : IScene
     {
-        private bool _initialized = false;
         private IntPtr _logo;
         private Task _initTask;
 
@@ -26,8 +25,8 @@ namespace RetroLite.Intro
         {
             var destinationRect = new SDL.SDL_Rect()
             {
-                y = (_renderer.GetHeight() >> 1) - 256,
-                x = (_renderer.GetWidth() >> 1) - 256,
+                y = (_renderer.Height >> 1) - 256,
+                x = (_renderer.Width >> 1) - 256,
                 h = 512,
                 w = 512
             };
@@ -40,32 +39,29 @@ namespace RetroLite.Intro
 
         public void Start()
         {
-            if (_initialized)
-            {
-                throw new Exception("Already initialized");
-            }
-
+            Console.WriteLine(Environment.CurrentDirectory);
             _logo = _renderer.LoadTextureFromFile(Path.Combine(Environment.CurrentDirectory, "assets", "logo.png"));
 
             _initTask = new Task(() =>
             {
                 var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "cores"));
-
+                
                 foreach (var systemPath in systems)
                 {
+                    Console.WriteLine(systemPath);
                     var system = Path.GetFileNameWithoutExtension(systemPath);
 
                     var cores = Directory.GetFiles(systemPath, "*.dll");
                     
                     foreach (var core in cores)
                     {
+                        Console.WriteLine(core);
                         Program.EventBus.Publish(new LoadCoreEvent(core, system));
                     }
                 }
             });
+            
             _initTask.Start();
-
-            _initialized = true;
         }
         
         public void Stop()

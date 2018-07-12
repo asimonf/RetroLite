@@ -3,6 +3,13 @@ using SDL2;
 
 namespace RetroLite.Input
 {
+    public enum GameControllerButtonState
+    {
+        None = 0,
+        Down,
+        Up
+    }
+    
     public enum GameControllerButton
     {
          A = 0,
@@ -46,24 +53,24 @@ namespace RetroLite.Input
         public int ID { get; private set; }
         public int Index { get; private set; }
 
-        public bool A { get; private set; }
-        public bool B { get; private set; }
-        public bool X { get; private set; }
-        public bool Y { get; private set; }
+        public GameControllerButtonState A { get; private set; }
+        public GameControllerButtonState B { get; private set; }
+        public GameControllerButtonState X { get; private set; }
+        public GameControllerButtonState Y { get; private set; }
 
-        public bool Back { get; private set; }
-        public bool Guide { get; private set; }
-        public bool Start { get; private set; }
+        public GameControllerButtonState Back { get; private set; }
+        public GameControllerButtonState Guide { get; private set; }
+        public GameControllerButtonState Start { get; private set; }
 
-        public bool LeftStick { get; private set; }
-        public bool LeftShoulder { get; private set; }
-        public bool RightStick { get; private set; }
-        public bool RightShoulder { get; private set; }
+        public GameControllerButtonState LeftStick { get; private set; }
+        public GameControllerButtonState LeftShoulder { get; private set; }
+        public GameControllerButtonState RightStick { get; private set; }
+        public GameControllerButtonState RightShoulder { get; private set; }
 
-        public bool DpadUp { get; private set; }
-        public bool DpadDown { get; private set; }
-        public bool DpadLeft { get; private set; }
-        public bool DpadRight { get; private set; }
+        public GameControllerButtonState DpadUp { get; private set; }
+        public GameControllerButtonState DpadDown { get; private set; }
+        public GameControllerButtonState DpadLeft { get; private set; }
+        public GameControllerButtonState DpadRight { get; private set; }
 
         public short LeftTrigger { get; private set; }
         public short RightTrigger { get; private set; }
@@ -89,7 +96,7 @@ namespace RetroLite.Input
             ID = SDL.SDL_JoystickInstanceID(joystick);
         }
 
-        public bool GetButtonState(GameControllerButton button)
+        public GameControllerButtonState GetButtonState(GameControllerButton button)
         {
             switch (button)
             {
@@ -124,7 +131,7 @@ namespace RetroLite.Input
                 case GameControllerButton.DpadRight:
                     return DpadRight;
                 default:
-                    return false;
+                    return GameControllerButtonState.None;
             }
         }
 
@@ -151,7 +158,7 @@ namespace RetroLite.Input
 
         public void Reset()
         {
-            A = B = X = Y = DpadDown = DpadLeft = DpadRight = DpadUp = Back = Guide = Start = LeftShoulder = LeftStick = RightShoulder = RightStick = false;
+            A = B = X = Y = DpadDown = DpadLeft = DpadRight = DpadUp = Back = Guide = Start = LeftShoulder = LeftStick = RightShoulder = RightStick = GameControllerButtonState.None;
             LeftTrigger = RightTrigger = LeftX = LeftY = RightX = RightY = 0;
         }
 
@@ -207,7 +214,7 @@ namespace RetroLite.Input
 
         public void ProcessButtonEvent(SDL.SDL_ControllerButtonEvent e)
         {
-            var state = e.state == SDL.SDL_PRESSED ? true : false;
+            var state = e.state == SDL.SDL_PRESSED ? GameControllerButtonState.Down : GameControllerButtonState.Up;
 
             switch ((SDL.SDL_GameControllerButton)e.button)
             {
@@ -263,7 +270,7 @@ namespace RetroLite.Input
         {
             if (e.repeat > 0) return;
             
-            var state = e.state == SDL.SDL_PRESSED ? true : false;
+            var state = e.state == SDL.SDL_PRESSED ? GameControllerButtonState.Down : GameControllerButtonState.Up;
             
             switch (e.keysym.sym)
             {

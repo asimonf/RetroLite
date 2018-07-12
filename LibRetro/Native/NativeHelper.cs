@@ -39,7 +39,7 @@ namespace LibRetro.Native
 
             foreach (Match match in matches)
             {
-                switch (match.Captures[1].Value)
+                switch (match.Groups[1].Value)
                 {
                     case "b":
                         argumentsToPush += 1;

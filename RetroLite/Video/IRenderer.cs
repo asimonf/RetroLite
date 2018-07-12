@@ -5,8 +5,8 @@ namespace RetroLite.Video
 {
     public interface IRenderer
     {
-        int GetWidth();
-        int GetHeight();
+        int Width { get; }
+        int Height { get; }
 
         IntPtr LoadTextureFromFile(string path);
         IntPtr CreateTexture(uint format, SDL.SDL_TextureAccess access, int width, int height);
@@ -33,6 +33,9 @@ namespace RetroLite.Video
         void RenderCopyDest(IntPtr texture, ref SDL.SDL_Rect dest);
         void RenderCopySrc(IntPtr texture, ref SDL.SDL_Rect src);
         void RenderPresent();
+
+        bool SetRenderDrawBlendMode(SDL.SDL_BlendMode mode);
+        bool SetTextureBlendMode(IntPtr texture, SDL.SDL_BlendMode mode);
 
         void Screenshot();
     }

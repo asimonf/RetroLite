@@ -14,9 +14,6 @@ namespace RetroLite.Scene
         private readonly IRenderer _renderer;
         private readonly EventProcessor _eventProcessor;
 
-        public int Height => _renderer.GetHeight();
-        public int Width => _renderer.GetWidth();
-
         public bool Running { get; set; } = false;
         
         public SceneManager(IRenderer renderer, EventProcessor eventProcessor)
@@ -92,7 +89,7 @@ namespace RetroLite.Scene
 
         public void Draw()
         {
-            _renderer.SetRenderDrawColor(255, 0, 0, 255);
+            _renderer.SetRenderDrawColor(0, 0, 0, 0);
             _renderer.RenderClear();
             _scenes.Peek().Draw();
             _renderer.RenderPresent();

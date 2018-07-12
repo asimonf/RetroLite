@@ -9,32 +9,15 @@ namespace RetroLite.Video
         private IntPtr _sdlRenderer;
         private IntPtr _framebuffer;
 
-        private int _height;
-        private int _width;
+        public int Height { get; }
+        public int Width { get; }
 
         public SoftwareRenderer(int width, int height)
         {
-            _width = width;
-            _height = height;
+            Width = width;
+            Height = height;
             
-            Console.WriteLine("Initializing Video");
-            
-            if (SDL.SDL_InitSubSystem(SDL.SDL_INIT_VIDEO) != 0)
-            {
-                Console.WriteLine("Init error");
-                throw new Exception("SDL Video Initialization error");
-            }
-            
-            _sdlSurface = SDL.SDL_CreateRGBSurface(
-                0, 
-                _width, 
-                _height, 
-                32,
-                0,
-                0,
-                0,
-                0
-            );
+            _sdlSurface = SDL.SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
 
             if (_sdlSurface == null)
             {
@@ -52,20 +35,17 @@ namespace RetroLite.Video
         ~SoftwareRenderer()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
-            SDL.SDL_QuitSubSystem(SDL.SDL_INIT_VIDEO);
-
-            _sdlRenderer = IntPtr.Zero;
-            _framebuffer = IntPtr.Zero;
+            SDL.SDL_FreeSurface(_framebuffer);
         }
 
         public int GetWidth()
         {
-            return _width;
+            return Width;
         }
 
         public int GetHeight()
         {
-            return _height;
+            return Height;
         }
 
         public IntPtr LoadTextureFromFile(string path)
@@ -136,12 +116,20 @@ namespace RetroLite.Video
         public void RenderPresent()
         {
             SDL.SDL_RenderPresent(_sdlRenderer);
-            SDL.SDL_Delay(5);
         }
 
         public void Screenshot()
         {
-            SDL.SDL_SaveBMP(_sdlSurface, "screenshot.bmp");
+        }
+        
+        public bool SetRenderDrawBlendMode(SDL.SDL_BlendMode mode)
+        {
+            return SDL.SDL_SetRenderDrawBlendMode(_sdlRenderer, mode) == 0;
+        }
+        
+        public bool SetTextureBlendMode(IntPtr texture, SDL.SDL_BlendMode mode)
+        {
+            return SDL.SDL_SetTextureBlendMode(texture, mode) == 0;
         }
     }
 }

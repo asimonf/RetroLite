@@ -21,14 +21,6 @@ namespace RetroLite.Input
             _ports = new GameController[MaxPorts];
             _ports[0] = new GameController();
             
-            Console.WriteLine("Initializing Event Processor");
-            
-            if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK) != 0)
-            {
-                Console.WriteLine("Init error");
-                throw new Exception("SDL Joystick Initialization error");
-            }
-            
             var joystickCount = SDL.SDL_NumJoysticks();
 
             for (var i = 0; i < joystickCount; i++)
@@ -74,14 +66,14 @@ namespace RetroLite.Input
         public void HandleEvents()
         {
             //Handle events on queue
+            ResetControllers();
             while (SDL.SDL_PollEvent(out var e) != 0)
             {
                 switch (e.type)
                 {
                     case SDL.SDL_EventType.SDL_CONTROLLERDEVICEADDED:
                     {
-                        GameController gameController;
-                        gameController = _lastFreePort > 0 ? new GameController() : _ports[_lastFreePort++];
+                        var gameController = _lastFreePort > 0 ? new GameController() : _ports[_lastFreePort++];
 
                         gameController.InitializeAsJoystick(e.cdevice.which);
                         if (!_gameControllersById.ContainsKey(gameController.ID))
@@ -94,19 +86,21 @@ namespace RetroLite.Input
                     
                     case SDL.SDL_EventType.SDL_CONTROLLERDEVICEREMOVED:
                     {
-                        var gameController = _gameControllersById[e.cdevice.which];
-                        _gameControllersById.Remove(e.cdevice.which);
-                        gameController.Dispose();
-
-                        for (var i = 0; i < _ports.Length; i++)
+                        using (var gameController = _gameControllersById[e.cdevice.which])
                         {
-                            if (_ports[i] == gameController)
+                            _gameControllersById.Remove(e.cdevice.which);
+
+                            for (var i = 0; i < _ports.Length; i++)
                             {
+                                if (_ports[i] != gameController) continue;
+                                
                                 _ports[i] = null;
                                 _lastFreePort = i;
+                                
                                 break;
                             }
                         }
+
                         break;
                     }
                     case SDL.SDL_EventType.SDL_CONTROLLERBUTTONDOWN:
@@ -127,7 +121,7 @@ namespace RetroLite.Input
             }
         }
 
-        public VirtualKeys GetVirtualKey(GameControllerButton button)
+        public static VirtualKeys GetVirtualKey(GameControllerButton button)
         {
             switch (button)
             {
