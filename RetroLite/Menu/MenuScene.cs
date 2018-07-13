@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using Redbus;
 using RetroLite.Event;
 using RetroLite.Input;
@@ -92,12 +93,14 @@ namespace RetroLite.Menu
             {
                 _isCoreRunning = false;
                 _isMenuOpen = true;
+                _eventProcessor.ResetControllers();
             }
         }
 
         private void OnIntroFinishedEvent(IntroFinishedEvent introFinishedEvent)
         {
             _manager.ChangeScene(this);
+            _eventProcessor.ResetControllers();
         }
 
         public void Start()
@@ -149,11 +152,12 @@ namespace RetroLite.Menu
                     if (!_isCoreStarted && 
                         button == GameControllerButton.B && 
                         currentState == GameControllerButtonState.Up &&
-                        _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory, "roms/snes/240pSuite.sfc")))
+                        _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory, "roms/snes/Super Mario World (USA).sfc")))
                     {
                         _isCoreStarted = true;
                         _isCoreRunning = true;
                         _isMenuOpen = false;
+                        _eventProcessor.ResetControllers();
                     }
 
                     if (button == GameControllerButton.Guide && 
@@ -163,7 +167,8 @@ namespace RetroLite.Menu
                     {
                         _isMenuOpen = false;
                         _isCoreRunning = true;
-                        Console.WriteLine("Closing Menu");
+                        _logger.Debug("Closing Menu");
+                        _eventProcessor.ResetControllers();
                     } 
                 }
             }
@@ -179,6 +184,15 @@ namespace RetroLite.Menu
         {
             if (_isCoreStarted) _coreCollection.Draw();
             if (_isMenuOpen) _browserClient.Draw();
+        }
+
+        public void GetAudioData(IntPtr buffer, int frames)
+        {
+            if (_isCoreRunning) _coreCollection.GetAudioData(buffer, frames);
+            else for(var i=0; i < frames * 2 * 2; i++)
+            {
+                Marshal.WriteByte(buffer, i, 0);
+            }
         }
     }
 }

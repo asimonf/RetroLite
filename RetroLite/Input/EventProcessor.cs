@@ -66,7 +66,6 @@ namespace RetroLite.Input
         public void HandleEvents()
         {
             //Handle events on queue
-            ResetControllers();
             while (SDL.SDL_PollEvent(out var e) != 0)
             {
                 switch (e.type)

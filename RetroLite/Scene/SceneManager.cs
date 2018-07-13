@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using RetroLite.Input;
 using RetroLite.Video;
 using Xilium.CefGlue;
+using Xt;
 
 namespace RetroLite.Scene
 {
@@ -13,8 +14,17 @@ namespace RetroLite.Scene
 
         private readonly IRenderer _renderer;
         private readonly EventProcessor _eventProcessor;
+        
+        private readonly XtAudio _xtAudio;
+        private readonly XtDevice _xtDevice;
+        private readonly XtStream _xtStream;
+        
+        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
         public bool Running { get; set; } = false;
+        
+        public XtFormat AudioFormat { get; }
+        public IScene CurrentScene => _scenes.Count > 0 ? _scenes.Peek() : null;
         
         public SceneManager(IRenderer renderer, EventProcessor eventProcessor)
         {
@@ -22,34 +32,41 @@ namespace RetroLite.Scene
             _eventProcessor = eventProcessor;
             
             _scenes = new Stack<IScene>();
+            
+            _xtAudio = new XtAudio(null, IntPtr.Zero, _traceCallback, _fatalCallback);
+            var xtService = XtAudio.GetServiceBySetup(XtSetup.SystemAudio);
+            AudioFormat = new XtFormat(new XtMix(48000, XtSample.Int16), 0, 0, 2, 0);
+            _xtDevice = xtService.OpenDefaultDevice(true);
+            _xtStream = _xtDevice.OpenStream(AudioFormat, interleaved: true, raw: true, bufferSize: 16, RenderAudioCallback, XRunCallback, null);
+            _xtStream.Start();
+        }
+
+        ~SceneManager()
+        {
+            _xtStream.Stop();
+            _xtStream.Dispose();
+            _xtDevice.Dispose();
+            _xtAudio.Dispose();
         }
 
         public void Cleanup()
         {
             while (_scenes.Count > 0)
             {
-                _scenes.Pop().Stop();
+                var scene = _scenes.Pop();
+                scene.Pause();
+                scene.Stop();
             }
         }
 
         public void ChangeScene(IScene scene)
         {
-            _eventProcessor.ResetControllers();
+            _eventProcessor.ResetControllers();    
             if (_scenes.Count > 0)
             {
-                _scenes.Pop().Stop();
-            }
-
-            _scenes.Push(scene);
-            scene.Start();
-        }
-
-        public void PushScene(IScene scene)
-        {
-            _eventProcessor.ResetControllers();
-            if (_scenes.Count > 0)
-            {
-                _scenes.Peek().Pause();
+                var poppedScene = _scenes.Pop();
+                poppedScene.Pause();
+                poppedScene.Stop();
             }
 
             _scenes.Push(scene);
@@ -57,9 +74,14 @@ namespace RetroLite.Scene
             scene.Resume();
         }
 
-        public bool IsCurrentScene(IScene scene)
+        public void PushScene(IScene scene)
         {
-            return null != scene && scene == _scenes.Peek();
+            _eventProcessor.ResetControllers();
+            CurrentScene?.Pause();
+
+            _scenes.Push(scene);
+            scene.Start();
+            scene.Resume();
         }
 
         public void PopScene()
@@ -70,29 +92,59 @@ namespace RetroLite.Scene
                 _scenes.Pop().Stop();
             }
 
-            if (_scenes.Count > 0)
-            {
-                _scenes.Peek().Resume();
-            }
+            CurrentScene?.Resume();
         }
 
         public void HandleEvents()
         {
             _eventProcessor.HandleEvents();
-            _scenes.Peek().HandleEvents();
+            
+            CurrentScene?.HandleEvents();
         }
 
         public void Update()
         {
-            _scenes.Peek().Update();
+            CurrentScene?.Update();
         }
 
         public void Draw()
         {
             _renderer.SetRenderDrawColor(0, 0, 0, 0);
             _renderer.RenderClear();
-            _scenes.Peek().Draw();
+            CurrentScene?.Draw();
             _renderer.RenderPresent();
+        }
+        
+        private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,
+            ulong position, bool timeValid, ulong error, object user)
+        {
+            CurrentScene?.GetAudioData(((IntPtr)output), frames);
+        }
+        
+        private void XRunCallback(int index, object user)
+        {
+            _logger.Warn("Over/Underflow detected");
+        }
+        
+        private void _traceCallback(XtLevel level, string message)
+        {
+            switch (level)
+            {
+                case XtLevel.Info:
+                    _logger.Info(message);
+                    break;
+                case XtLevel.Error:
+                    _logger.Error(message);
+                    break;
+                case XtLevel.Fatal:
+                    _logger.Fatal(message);
+                    break;
+            }
+        }
+
+        private void _fatalCallback()
+        {
+            _logger.Fatal("Fatal error in audio driver");
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using RetroLite.Event;
 using RetroLite.Menu;
@@ -31,6 +32,14 @@ namespace RetroLite.Intro
                 w = 512
             };
             _renderer.RenderCopyDest(_logo, ref destinationRect);
+        }
+
+        public void GetAudioData(IntPtr buffer, int frames)
+        {
+            for(var i=0; i < frames * 2 * 2; i++)
+            {
+                Marshal.WriteByte(buffer, i, 0);
+            }
         }
 
         public void HandleEvents()

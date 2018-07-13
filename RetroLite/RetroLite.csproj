@@ -78,6 +78,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio\CircularBuffer.cs" />
     <Compile Include="Event\IntroFinishedEvent.cs" />
     <Compile Include="Event\LoadCoreEvent.cs" />
     <Compile Include="Event\OpenMenuEvent.cs" />

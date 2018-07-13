@@ -1,4 +1,6 @@
-﻿namespace RetroLite.Scene
+﻿using System;
+
+namespace RetroLite.Scene
 {
     public interface IScene
     {
@@ -10,5 +12,7 @@
         void HandleEvents();
         void Update();
         void Draw();
+
+        void GetAudioData(IntPtr buffer, int frames);
     }
 }

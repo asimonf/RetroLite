@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using LibRetro;
 using LibRetro.Types;
 using NLog;
+using RetroLite.Audio;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Menu;
@@ -31,7 +32,6 @@ namespace RetroLite.RetroCore
         private readonly List<InputDescriptor> _inputDescriptors;
         private readonly Dictionary<string, CoreVariable> _coreVariables;
 
-
         public bool GameLoaded { get; private set; }
 
         #region Video Related Fields
@@ -49,9 +49,10 @@ namespace RetroLite.RetroCore
         private double _audioResampleRatio;
         private int _temporaryAudioBufferPosition = 0;
         private readonly byte[] _temporaryAudioBuffer;
-        private float[] _temporaryConversionBuffer;
-        private float[] _temporaryResampleBuffer;
+        private readonly float[] _temporaryConversionBuffer;
+        private readonly float[] _temporaryResampleBuffer;
         private IntPtr _resamplerState;
+        private readonly CircularBuffer _audioBuffer;
 
         #endregion
 
@@ -100,6 +101,7 @@ namespace RetroLite.RetroCore
             _temporaryAudioBuffer = new byte[8192];
             _temporaryConversionBuffer = new float[8192];
             _temporaryResampleBuffer = new float[8192];
+            _audioBuffer = new CircularBuffer(8192 * 4);
 
             _manager = manager;
             _eventProcessor = eventProcessor;
@@ -214,18 +216,18 @@ namespace RetroLite.RetroCore
 
         private void _audioSample(short left, short right)
         {
-//            _temporaryAudioBuffer[_temporaryAudioBufferPosition] = (byte) (left & 0xFF);
-//            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 1] = (byte) (left >> 8);
-//            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 2] = (byte) (right & 0xFF);
-//            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 3] = (byte) (right >> 8);
-//            _temporaryAudioBufferPosition += 4;
+            _temporaryAudioBuffer[_temporaryAudioBufferPosition] = (byte) (left & 0xFF);
+            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 1] = (byte) (left >> 8);
+            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 2] = (byte) (right & 0xFF);
+            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 3] = (byte) (right >> 8);
+            _temporaryAudioBufferPosition += 4;
         }
 
         private ulong _audioSampleBatch(IntPtr data, ulong frames)
         {
-//            var size = (int) frames * 4;
-//            Marshal.Copy(data, _temporaryAudioBuffer, _temporaryAudioBufferPosition, size);
-//            _temporaryAudioBufferPosition += size;
+            var size = (int) frames * 4;
+            Marshal.Copy(data, _temporaryAudioBuffer, _temporaryAudioBufferPosition, size);
+            _temporaryAudioBufferPosition += size;
 
             return frames;
         }
@@ -446,7 +448,19 @@ namespace RetroLite.RetroCore
             if (GameLoaded && _framebuffer != IntPtr.Zero)
             {
                 _renderer.RenderCopy(_framebuffer);
+
+                if (_audioBuffer.Glitches > 0)
+                {
+                    Console.Write("x");
+                    _audioBuffer.Glitches = 0;
+                }
             }
+        }
+
+        public void GetAudioData(IntPtr buffer, int frames)
+        {
+            // One frame is 2 samples of 2 bytes each (short) 
+            _audioBuffer.CopyTo(buffer, frames  * 2 * 2);
         }
 
         #endregion
@@ -466,57 +480,56 @@ namespace RetroLite.RetroCore
                 _logger.Error("Error initializing resampler: '{0}'", SampleRate.src_strerror(error));
             }
 
-//            _audioResampleRatio = (_manager.WaveFormat.SampleRate /
-//                                   (_currentSystemAvInfo.Timing.SampleRate * 60 / _currentSystemAvInfo.Timing.Fps));
-//            _logger.Debug("Audio Resample Ratio: {0}", _audioResampleRatio);
+            _audioResampleRatio = _manager.AudioFormat.mix.rate / _currentSystemAvInfo.Timing.SampleRate;
+            _logger.Debug("Audio Resample Ratio: {0}", _audioResampleRatio);
         }
 
         private void _resampleAudioData()
         {
-//            unsafe
-//            {
-//                var frames = _temporaryAudioBufferPosition / 4;
-//                fixed (byte* dataPtr = &_temporaryAudioBuffer[0])
-//                {
-//                    var shortDataPtr = (short*) dataPtr;
-//                    fixed (float* conversionPtr = &_temporaryConversionBuffer[0], resamplePtr =
-//                        &_temporaryResampleBuffer[0])
-//                    {
-//                        SampleRate.src_short_to_float_array(shortDataPtr, conversionPtr, _temporaryAudioBufferPosition);
-//
-//                        var convert = new SampleRate.SRC_DATA()
-//                        {
-//                            data_in = conversionPtr,
-//                            data_out = resamplePtr,
-//                            input_frames = frames,
-//                            output_frames = frames * 2,
-//                            src_ratio = _audioResampleRatio
-//                        };
-//                        var res = SampleRate.src_process(_resamplerState, ref convert);
-//
-//                        if (res != 0)
-//                        {
-//                            _logger.Error(SampleRate.src_strerror(res));
-//                        }
-//                        else
-//                        {
-//                            SampleRate.src_float_to_short_array(resamplePtr, shortDataPtr,
-//                                convert.output_frames_gen * 2);
-//                            var size = convert.output_frames_gen * 4;
-//                            _audioBuffer.AddSamples(_temporaryAudioBuffer, 0, size);
-//                        }
-//                    }
-//                }
-//
-//                _temporaryAudioBufferPosition = 0;
-//            }
+            unsafe
+            {
+                var frames = _temporaryAudioBufferPosition / 4;
+                fixed (byte* dataPtr = &_temporaryAudioBuffer[0])
+                {
+                    var shortDataPtr = (short*) dataPtr;
+                    fixed (float* conversionPtr = &_temporaryConversionBuffer[0], resamplePtr =
+                        &_temporaryResampleBuffer[0])
+                    {
+                        SampleRate.src_short_to_float_array(shortDataPtr, conversionPtr, _temporaryAudioBufferPosition);
+
+                        var convert = new SampleRate.SRC_DATA()
+                        {
+                            data_in = conversionPtr,
+                            data_out = resamplePtr,
+                            input_frames = frames,
+                            output_frames = frames * 2,
+                            src_ratio = _audioResampleRatio
+                        };
+                        var res = SampleRate.src_process(_resamplerState, ref convert);
+
+                        if (res != 0)
+                        {
+                            _logger.Error(SampleRate.src_strerror(res));
+                        }
+                        else
+                        {
+                            SampleRate.src_float_to_short_array(resamplePtr, shortDataPtr,
+                                convert.output_frames_gen * 2);
+                            var size = convert.output_frames_gen * 4;
+                            _audioBuffer.CopyFrom(_temporaryAudioBuffer, size);
+                        }
+                    }
+                }
+
+                _temporaryAudioBufferPosition = 0;
+            }
         }
 
         private void _recreateFramebuffer()
         {
             if (_framebuffer != IntPtr.Zero)
             {
-                SDL.SDL_DestroyTexture(_framebuffer);
+                _renderer.FreeTexture(_framebuffer);
             }
 
             var format = SDL.SDL_PIXELFORMAT_RGB888;

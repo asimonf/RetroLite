@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using NLog.Targets;
 using Redbus;
 using RetroLite.Event;
@@ -57,6 +58,11 @@ namespace RetroLite.RetroCore
         public void Draw()
         {
             _currentCore?.Draw();
+        }
+
+        public void GetAudioData(IntPtr buffer, int frames)
+        {
+            _currentCore?.GetAudioData(buffer, frames);
         }
 
         public void HandleEvents()
