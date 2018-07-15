@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 using Redbus;
 using RetroLite.Event;
 using RetroLite.Input;
@@ -26,7 +27,7 @@ namespace RetroLite.Menu
         private readonly MenuBrowserClient _browserClient;
         private readonly SceneManager _manager;
         private readonly EventProcessor _eventProcessor;
-        private readonly RetroLiteCollection _coreCollection;
+        private readonly RetroCoreCollection _coreCollection;
 
         public bool IsLoaded => !_browser.IsLoading;
 
@@ -40,7 +41,7 @@ namespace RetroLite.Menu
             EventProcessor eventProcessor,
             MenuBrowserClient browserClient,
             CefApp menuCeffApp,
-            RetroLiteCollection coreCollection)
+            RetroCoreCollection coreCollection)
         {
             // State Initialization
             _buttons = (GameControllerButton[]) Enum.GetValues(typeof(GameControllerButton));
@@ -133,14 +134,16 @@ namespace RetroLite.Menu
             {
                 var menuController = _eventProcessor[0];
 
-                foreach (var button in _buttons)
+                for (var index = 0; index < _buttons.Length; index++)
                 {
+                    var button = _buttons[index];
                     var currentState = menuController.GetButtonState(button);
-                    
+
                     if (currentState == GameControllerButtonState.None) continue;
-                    
-                    var eventType = currentState == GameControllerButtonState.Down ? 
-                        CefKeyEventType.KeyDown : CefKeyEventType.KeyUp;
+
+                    var eventType = currentState == GameControllerButtonState.Down
+                        ? CefKeyEventType.KeyDown
+                        : CefKeyEventType.KeyUp;
                     var cefKeyEvent = new CefKeyEvent
                     {
                         EventType = eventType,
@@ -149,10 +152,25 @@ namespace RetroLite.Menu
 
                     _browser.GetHost().SendKeyEvent(cefKeyEvent);
                     
-                    if (!_isCoreStarted && 
-                        button == GameControllerButton.B && 
+                    if (!_isCoreStarted &&
+                        button == GameControllerButton.A &&
+                        currentState == GameControllerButtonState.Up)
+                    {
+                        Program.StateManager.ScanForGames(Path.Combine(Environment.CurrentDirectory, "roms"));
+                    }
+                    
+                    if (!_isCoreStarted &&
+                        button == GameControllerButton.X &&
+                        currentState == GameControllerButtonState.Up)
+                    {
+                        Console.WriteLine(JsonConvert.SerializeObject(Program.StateManager.GetGameList()));
+                    }
+
+                    if (!_isCoreStarted &&
+                        button == GameControllerButton.B &&
                         currentState == GameControllerButtonState.Up &&
-                        _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory, "roms/snes/Super Mario World (USA).sfc")))
+                        _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory,
+                            Program.StateManager.GetGameList()[0].Path)))
                     {
                         _isCoreStarted = true;
                         _isCoreRunning = true;
@@ -160,16 +178,16 @@ namespace RetroLite.Menu
                         _eventProcessor.ResetControllers();
                     }
 
-                    if (button == GameControllerButton.Guide && 
+                    if (button == GameControllerButton.Guide &&
                         currentState == GameControllerButtonState.Up &&
-                        _isMenuOpen && 
+                        _isMenuOpen &&
                         _isCoreStarted)
                     {
                         _isMenuOpen = false;
                         _isCoreRunning = true;
                         _logger.Debug("Closing Menu");
                         _eventProcessor.ResetControllers();
-                    } 
+                    }
                 }
             }
         }

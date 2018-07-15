@@ -4,7 +4,7 @@ using LibRetro.Types;
 
 namespace RetroLite.RetroCore
 {
-    public unsafe partial class RetroLite
+    public unsafe partial class RetroCore
     {
         private bool _environment(RetroEnvironmentCommand cmd, void* data)
         {
@@ -117,7 +117,7 @@ namespace RetroLite.RetroCore
 
         private bool _setMessage(RetroMessage* message)
         {
-            RetroLite._logger.Info("Message: " + message->Message);
+            RetroCore._logger.Info("Message: " + message->Message);
 
             return true;
         }
@@ -131,7 +131,7 @@ namespace RetroLite.RetroCore
 
         private bool _setPerformanceLevel(uint* performanceLevel)
         {
-            RetroLite._logger.Debug("Setting performance level to: {0}", *performanceLevel);
+            RetroCore._logger.Debug("Setting performance level to: {0}", *performanceLevel);
 
             return true;
         }
@@ -200,7 +200,7 @@ namespace RetroLite.RetroCore
 
             if (!_coreVariables.ContainsKey(variable.Key))
             {
-                RetroLite._logger.Warn("Variable not set: {0}", variable.Key);
+                RetroCore._logger.Warn("Variable not set: {0}", variable.Key);
                 return false;
             }
 

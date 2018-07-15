@@ -13,36 +13,36 @@ using RetroLite.Video;
 
 namespace RetroLite.RetroCore
 {
-    public class RetroLiteCollection : IScene
+    public class RetroCoreCollection : IScene
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         
-        private readonly Dictionary<string, RetroLite> _coresByName;
-        private readonly Dictionary<string, List<RetroLite>> _coresBySystem;
+        private readonly Dictionary<string, RetroCore> _coresByName;
+        private readonly Dictionary<string, List<RetroCore>> _coresBySystem;
 
-        private readonly List<RetroLite> _loadedCores;
+        private readonly List<RetroCore> _loadedCores;
         private readonly List<SubscriptionToken> _eventTokens;
-        private RetroLite _currentCore;
+        private RetroCore _currentCore;
         
         private readonly SceneManager _manager;
         private readonly EventProcessor _eventProcessor;
         private readonly IRenderer _renderer;
 
-        public RetroLiteCollection(SceneManager manager, EventProcessor eventProcessor, IRenderer renderer)
+        public RetroCoreCollection(SceneManager manager, EventProcessor eventProcessor, IRenderer renderer)
         {
             _manager = manager;
             _eventProcessor = eventProcessor;
             _renderer = renderer;
             
-            _coresBySystem = new Dictionary<string, List<RetroLite>>();
-            _coresByName = new Dictionary<string, RetroLite>();
-            _loadedCores = new List<RetroLite>();
+            _coresBySystem = new Dictionary<string, List<RetroCore>>();
+            _coresByName = new Dictionary<string, RetroCore>();
+            _loadedCores = new List<RetroCore>();
             _eventTokens = new List<SubscriptionToken>();
 
             _eventTokens.Add(Program.EventBus.Subscribe<LoadCoreEvent>(OnLoadCoreEvent));
         }
 
-        ~RetroLiteCollection()
+        ~RetroCoreCollection()
         {
             foreach (var token in _eventTokens)
             {
@@ -141,14 +141,14 @@ namespace RetroLite.RetroCore
 
             try
             {
-                var core = new RetroLite(dll, _manager, _eventProcessor, _renderer);
+                var core = new RetroCore(dll, _manager, _eventProcessor, _renderer);
                 core.Start();
 
                 _coresByName.Add(name, core);
 
                 if (!_coresBySystem.ContainsKey(system))
                 {
-                    _coresBySystem.Add(system, new List<RetroLite>());
+                    _coresBySystem.Add(system, new List<RetroCore>());
                 }
 
                 _logger.Debug($"Core '{name}' for system '{system}' loaded.");

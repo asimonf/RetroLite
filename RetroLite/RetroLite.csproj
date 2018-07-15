@@ -42,7 +42,15 @@
       <HintPath>..\packages\Chromely.Unofficial.CefGlue.NetStd.66.0.3359.117\lib\netstandard2.0\Chromely.Unofficial.CefGlue.NetStd.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="LiteDB, Version=4.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27">
+      <HintPath>..\packages\LiteDB.4.1.4\lib\net40\LiteDB.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="mscorlib" />
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
       <HintPath>..\packages\NLog.4.5.6\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
@@ -79,14 +87,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\CircularBuffer.cs" />
+    <Compile Include="DB\StateManager.cs" />
+    <Compile Include="DB\Entity\Core.cs" />
+    <Compile Include="DB\Entity\Game.cs" />
+    <Compile Include="DB\Entity\System.cs" />
     <Compile Include="Event\IntroFinishedEvent.cs" />
     <Compile Include="Event\LoadCoreEvent.cs" />
     <Compile Include="Event\OpenMenuEvent.cs" />
     <Compile Include="RetroCore\CoreVariable.cs" />
     <Compile Include="RetroCore\InputDescriptor.cs" />
-    <Compile Include="RetroCore\RetroLite.cs" />
-    <Compile Include="RetroCore\RetroLiteCollection.cs" />
-    <Compile Include="RetroCore\RetroLiteEnvironment.cs" />
+    <Compile Include="RetroCore\RetroCore.cs" />
+    <Compile Include="RetroCore\RetroCoreCollection.cs" />
+    <Compile Include="RetroCore\RetroCoreEnvironment.cs" />
     <Compile Include="Input\EventProcessor.cs" />
     <Compile Include="Input\GameController.cs" />
     <Compile Include="Input\GameControllerStatus.cs" />
@@ -126,6 +138,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="assets\logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Menu\WebAPI\Model" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

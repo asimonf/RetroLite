@@ -13,7 +13,6 @@ namespace RetroLite.Intro
     public class IntroScene : IScene
     {
         private IntPtr _logo;
-        private Task _initTask;
 
         private readonly IRenderer _renderer;
 
@@ -49,32 +48,12 @@ namespace RetroLite.Intro
         public void Start()
         {
             _logo = _renderer.LoadTextureFromFile(Path.Combine(Environment.CurrentDirectory, "assets", "logo.png"));
-
-            _initTask = new Task(() =>
-            {
-                var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "cores"));
-                
-                foreach (var systemPath in systems)
-                {
-                    var system = Path.GetFileNameWithoutExtension(systemPath);
-
-                    var cores = Directory.GetFiles(systemPath, "*.dll");
-                    
-                    foreach (var core in cores)
-                    {
-                        Program.EventBus.Publish(new LoadCoreEvent(core, system));
-                    }
-                }
-            });
-            
-            _initTask.Start();
+            Program.StateManager.Initialize();
         }
         
         public void Stop()
         {
             _renderer.FreeTexture(_logo);
-            _initTask.Dispose();
-            _initTask = null;
         }
 
         public void Pause()
@@ -87,12 +66,11 @@ namespace RetroLite.Intro
 
         public void Update()
         {
-            if (!_initTask.IsCompleted)
+            if (!Program.StateManager.Initialized)
             {
                 return;
             }
             
-            _renderer.Screenshot();
             Program.EventBus.Publish(new IntroFinishedEvent());
         }
     }

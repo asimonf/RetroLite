@@ -1,5 +1,6 @@
 ﻿using System;
 using Redbus;
+using RetroLite.DB;
 using RetroLite.Input;
 using RetroLite.Intro;
 using RetroLite.Menu;
@@ -15,9 +16,9 @@ namespace RetroLite
 {
     internal static class Program
     {
-        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
-
+        public static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
         public static EventBus EventBus { get; } = new EventBus();
+        public static StateManager StateManager { get; } = new StateManager();
         
         [STAThread]
         public static int Main(string[] args)
@@ -35,11 +36,11 @@ namespace RetroLite
             SceneManager sceneManager = null;
             try
             {
-                _logger.Info("Initializing SDL");
+                Logger.Info("Initializing SDL");
 
                 if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
                 {
-                    _logger.Error(new Exception("SDL Initialization error"));
+                    Logger.Error(new Exception("SDL Initialization error"));
                 }
                 
                 // Initialize Components
@@ -48,7 +49,7 @@ namespace RetroLite
                 sceneManager = new SceneManager(renderer, eventProcessor);
                 var menuRenderer = new MenuRenderer(renderer);
                 var menuBrowserClient = new MenuBrowserClient(menuRenderer);
-                var retroLiteCollection = new RetroLiteCollection(sceneManager, eventProcessor, renderer);
+                var retroLiteCollection = new RetroCoreCollection(sceneManager, eventProcessor, renderer);
                 var menuScene = new MenuScene(
                     cefMainArgs, 
                     sceneManager, 
@@ -68,7 +69,7 @@ namespace RetroLite
             }
             catch (Exception e)
             {
-                _logger.Error(e);
+                Logger.Error(e);
                 return 1;
             }
             finally

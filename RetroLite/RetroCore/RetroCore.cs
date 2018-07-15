@@ -16,7 +16,7 @@ using SRC_CS;
 
 namespace RetroLite.RetroCore
 {
-    public partial class RetroLite : IDisposable, IScene
+    public partial class RetroCore : IDisposable
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         
@@ -63,7 +63,7 @@ namespace RetroLite.RetroCore
 
         #endregion
 
-        public RetroLite(string dllPath, SceneManager manager, EventProcessor eventProcessor, IRenderer renderer)
+        public RetroCore(string dllPath, SceneManager manager, EventProcessor eventProcessor, IRenderer renderer)
         {
             _systemDirectory = Path.Combine(
                 Environment.CurrentDirectory,
@@ -429,7 +429,7 @@ namespace RetroLite.RetroCore
                 // Switch to menu if guide is pressed
                 if (_eventProcessor[port].Guide == GameControllerButtonState.Up)
                 {
-                    Program.EventBus.Publish(new OpenMenuEvent(this));
+                    Program.EventBus.Publish(new OpenMenuEvent());
                     break;                    
                 }
             }
@@ -481,6 +481,7 @@ namespace RetroLite.RetroCore
                 _logger.Error("Error initializing resampler: '{0}'", SampleRate.src_strerror(error));
             }
 
+            // This should be fixed with the target framerate
             _audioResampleRatio = _manager.AudioFormat.mix.rate / _currentSystemAvInfo.Timing.SampleRate;
             _logger.Debug("Audio Resample Ratio: {0}", _audioResampleRatio);
         }

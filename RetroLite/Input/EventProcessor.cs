@@ -57,15 +57,23 @@ namespace RetroLite.Input
 
         public void ResetControllers()
         {
-            foreach (var controller in _ports)
+            for (var index = 0; index < _ports.Length; index++)
             {
+                var controller = _ports[index];
                 controller?.Reset();
             }
         }
+        
+        
 
         public void HandleEvents()
         {
             //Handle events on queue
+            for (var index = 0; index < _ports.Length; index++)
+            {
+                var controller = _ports[index];
+                controller?.CleanupKeyUp();
+            }
             while (SDL.SDL_PollEvent(out var e) != 0)
             {
                 switch (e.type)
@@ -125,13 +133,13 @@ namespace RetroLite.Input
             switch (button)
             {
                 case GameControllerButton.A:
-                    return VirtualKeys.D;
-                case GameControllerButton.B:
                     return VirtualKeys.C;
+                case GameControllerButton.B:
+                    return VirtualKeys.D;
                 case GameControllerButton.X:
-                    return VirtualKeys.S;
-                case GameControllerButton.Y:
                     return VirtualKeys.X;
+                case GameControllerButton.Y:
+                    return VirtualKeys.S;
                 case GameControllerButton.Back:
                     return VirtualKeys.N2;
                 case GameControllerButton.Guide:

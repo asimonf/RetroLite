@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Hosting;
 using SDL2;
 
 namespace RetroLite.Input
@@ -12,24 +13,24 @@ namespace RetroLite.Input
     
     public enum GameControllerButton
     {
-         A = 0,
-         B,
-         X,
-         Y,
+        A = 0,
+        B,
+        X,
+        Y,
 
-         Back,
-         Guide,
-         Start,
+        Back,
+        Guide,
+        Start,
 
-         LeftStick,
-         LeftShoulder,
-         RightStick,
-         RightShoulder,
+        LeftStick,
+        LeftShoulder,
+        RightStick,
+        RightShoulder,
 
-         DpadUp,
-         DpadDown,
-         DpadLeft,
-         DpadRight
+        DpadUp,
+        DpadDown,
+        DpadLeft,
+        DpadRight
     }
 
     public enum GameControllerAnalog
@@ -162,6 +163,28 @@ namespace RetroLite.Input
             LeftTrigger = RightTrigger = LeftX = LeftY = RightX = RightY = 0;
         }
 
+        public void CleanupKeyUp()
+        {
+            if (GameControllerButtonState.Up == A) A = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == B) B = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == X) X = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == Y) Y = GameControllerButtonState.None;
+            
+            if (GameControllerButtonState.Up == DpadDown) DpadDown = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == DpadLeft) DpadLeft = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == DpadRight) DpadRight = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == DpadUp) DpadUp = GameControllerButtonState.None;
+            
+            if (GameControllerButtonState.Up == Back) Back = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == Guide) Guide = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == Start) Start = GameControllerButtonState.None;
+            
+            if (GameControllerButtonState.Up == LeftShoulder) LeftShoulder = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == LeftStick) LeftStick = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == RightShoulder) RightShoulder = GameControllerButtonState.None;
+            if (GameControllerButtonState.Up == RightStick) RightStick = GameControllerButtonState.None;
+        }
+
         public void CopyStateFrom(GameController other)
         {
             A = other.A;
@@ -263,6 +286,8 @@ namespace RetroLite.Input
                 case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_Y:
                     Y = state;
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -274,10 +299,10 @@ namespace RetroLite.Input
             
             switch (e.keysym.sym)
             {
-                case SDL.SDL_Keycode.SDLK_d:
+                case SDL.SDL_Keycode.SDLK_c:
                     A = state;
                     break;
-                case SDL.SDL_Keycode.SDLK_c:
+                case SDL.SDL_Keycode.SDLK_d:
                     B = state;
                     break;
                 case SDL.SDL_Keycode.SDLK_2:
@@ -319,10 +344,10 @@ namespace RetroLite.Input
                 case SDL.SDL_Keycode.SDLK_1:
                     Start = state;
                     break;
-                case SDL.SDL_Keycode.SDLK_s:
+                case SDL.SDL_Keycode.SDLK_x:
                     X = state;
                     break;
-                case SDL.SDL_Keycode.SDLK_x:
+                case SDL.SDL_Keycode.SDLK_s:
                     Y = state;
                     break;
             }
