@@ -59,7 +59,7 @@ namespace LibRetro.Native
             return tmpBuffer.Capacity;
         }
 
-        [DllImport("kernel32.dll")]
+        [DllImport("kernel32.dll", SetLastError=true, CharSet = CharSet.Auto)]
         private static extern IntPtr LoadLibrary(string fileName);
 
         [DllImport("kernel32.dll")]

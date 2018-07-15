@@ -11,9 +11,6 @@ namespace RetroLite.Audio
         private int _start;
         private int _end;
 
-        public int Start => _start;
-        public int End => _end;
-        
         public int Capacity => _backingBuffer.Length;
         public int CurrentLength => _end >= _start ? _end - _start : _end + Capacity - _start;
         public int Glitches { get; set; }
@@ -38,26 +35,19 @@ namespace RetroLite.Audio
         /// <param name="length">How many bytes to copy from the pointer</param>
         public void CopyFrom(byte[] arr, int length)
         {
-            try
+            if (_end + length > Capacity)
             {
-                if (_end + length > Capacity)
-                {
-                    var newLength = Capacity - _end;
-                    var remainder = length - newLength;
+                var newLength = Capacity - _end;
+                var remainder = length - newLength;
 
-                    Buffer.BlockCopy(arr, 0, _backingBuffer, _end, newLength);
-                    Buffer.BlockCopy(arr, newLength, _backingBuffer, 0, remainder);
-                    _end = remainder;
-                }
-                else
-                {
-                    Buffer.BlockCopy(arr, 0, _backingBuffer, _end, length);
-                    _end = (_end + length) % Capacity;
-                }
+                Buffer.BlockCopy(arr, 0, _backingBuffer, _end, newLength);
+                Buffer.BlockCopy(arr, newLength, _backingBuffer, 0, remainder);
+                _end = remainder;
             }
-            catch (Exception)
+            else
             {
-                Debugger.Break();
+                Buffer.BlockCopy(arr, 0, _backingBuffer, _end, length);
+                _end = (_end + length) % Capacity;
             }
         }
 
@@ -68,14 +58,16 @@ namespace RetroLite.Audio
         /// <param name="length">How many bytes to copy to the pointer</param>
         public void CopyTo(IntPtr ptr, int length)
         {
-            var zeroFillCount = 0;
-
+            // Zero-fill if the request can't be filled with the current buffer contents
             if (length > CurrentLength)
             {
-                //Console.WriteLine($"Zerofill: {length}, {CurrentLength}");
                 Glitches++;
-                zeroFillCount = length - CurrentLength;
-                length = CurrentLength;
+                for (var i = 0; i < length; i++) unsafe
+                {
+                    ((byte*) ptr.ToPointer())[i] = 0;
+                }
+
+                return;
             }
 
             unsafe
@@ -97,11 +89,6 @@ namespace RetroLite.Audio
                         Buffer.MemoryCopy(backingBufferPtr + _start, ptr.ToPointer(), length, length);
                         _start = (_start + length) % Capacity;
                     }
-                }
-                
-                for (var i = 0; i < zeroFillCount; i++)
-                {
-                    ((byte*) ptr.ToPointer())[i + length] = 0;
                 }
             }
         }

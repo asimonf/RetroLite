@@ -4,7 +4,7 @@ using LibRetro.Types;
 
 namespace RetroLite.RetroCore
 {
-    unsafe partial class RetroLite
+    public unsafe partial class RetroLite
     {
         private bool _environment(RetroEnvironmentCommand cmd, void* data)
         {

@@ -48,7 +48,6 @@ namespace RetroLite.Intro
 
         public void Start()
         {
-            Console.WriteLine(Environment.CurrentDirectory);
             _logo = _renderer.LoadTextureFromFile(Path.Combine(Environment.CurrentDirectory, "assets", "logo.png"));
 
             _initTask = new Task(() =>
@@ -57,14 +56,12 @@ namespace RetroLite.Intro
                 
                 foreach (var systemPath in systems)
                 {
-                    Console.WriteLine(systemPath);
                     var system = Path.GetFileNameWithoutExtension(systemPath);
 
                     var cores = Directory.GetFiles(systemPath, "*.dll");
                     
                     foreach (var core in cores)
                     {
-                        Console.WriteLine(core);
                         Program.EventBus.Publish(new LoadCoreEvent(core, system));
                     }
                 }

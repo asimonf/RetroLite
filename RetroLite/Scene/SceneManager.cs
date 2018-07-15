@@ -1,6 +1,8 @@
 ﻿using SDL2;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 using RetroLite.Input;
 using RetroLite.Video;
 using Xilium.CefGlue;
@@ -25,7 +27,13 @@ namespace RetroLite.Scene
         
         public XtFormat AudioFormat { get; }
         public IScene CurrentScene => _scenes.Count > 0 ? _scenes.Peek() : null;
+
+        private long _fpsFrameCount = 0;
+        private long _fpsStartTime = 0;
+        private Stopwatch _nopTimer;
         
+        public double TargetFps { get; set; } = 60;
+
         public SceneManager(IRenderer renderer, EventProcessor eventProcessor)
         {
             _renderer = renderer;
@@ -39,6 +47,9 @@ namespace RetroLite.Scene
             _xtDevice = xtService.OpenDefaultDevice(true);
             _xtStream = _xtDevice.OpenStream(AudioFormat, interleaved: true, raw: true, bufferSize: 16, RenderAudioCallback, XRunCallback, null);
             _xtStream.Start();
+            
+            _nopTimer = new Stopwatch();
+            _nopTimer.Start();
         }
 
         ~SceneManager()
@@ -95,24 +106,44 @@ namespace RetroLite.Scene
             CurrentScene?.Resume();
         }
 
-        public void HandleEvents()
+        private void HandleEvents()
         {
             _eventProcessor.HandleEvents();
             
             CurrentScene?.HandleEvents();
         }
 
-        public void Update()
+        private void Update()
         {
             CurrentScene?.Update();
         }
 
-        public void Draw()
+        private void Draw()
         {
             _renderer.SetRenderDrawColor(0, 0, 0, 0);
             _renderer.RenderClear();
             CurrentScene?.Draw();
             _renderer.RenderPresent();
+        }
+
+        public void RunLoop()
+        {
+            var frameStart = Stopwatch.GetTimestamp();
+            HandleEvents();
+            Update();
+            Draw();
+            var frameTicks = Stopwatch.GetTimestamp() - frameStart;
+            var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
+            var targetFrametime = (1000.0 / TargetFps);
+            
+            if (!(targetFrametime > elapsedTime)) return;
+            
+            var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
+            _nopTimer.Restart();
+            while (_nopTimer.ElapsedTicks < durationTicks)
+            {
+
+            }
         }
         
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,

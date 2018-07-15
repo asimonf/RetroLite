@@ -179,7 +179,14 @@ namespace LibRetro
 
             if (_pDll == IntPtr.Zero)
             {
-                throw new Exception("Error loading the core library");
+                if (!NativeHelper.IsLinux())
+                {
+                    throw new System.ComponentModel.Win32Exception();
+                }
+                else
+                {
+                    throw new Exception("Error loading the core library");                    
+                }
             }
 
             _retroSetEnvironment = LoadFunction<RetroSetEnvironment>("retro_set_environment");

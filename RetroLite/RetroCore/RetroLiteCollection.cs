@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using NLog;
 using NLog.Targets;
 using Redbus;
 using RetroLite.Event;
@@ -14,6 +15,8 @@ namespace RetroLite.RetroCore
 {
     public class RetroLiteCollection : IScene
     {
+        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        
         private readonly Dictionary<string, RetroLite> _coresByName;
         private readonly Dictionary<string, List<RetroLite>> _coresBySystem;
 
@@ -121,28 +124,40 @@ namespace RetroLite.RetroCore
         private void OnLoadCoreEvent(LoadCoreEvent loadCoreEvent)
         {
             string dll = loadCoreEvent.Dll, system = loadCoreEvent.System;
-            Console.WriteLine($"Loading core {dll}");
+            _logger.Debug($"Loading core {dll}");
             var name = Path.GetFileNameWithoutExtension(dll);
 
             Debug.Assert(name != null, nameof(name) + " != null");
+
+            if (!File.Exists(dll))
+            {
+                throw new FileNotFoundException("Core not found");;
+            }
             
             if (_coresByName.ContainsKey(name))
             {
                 throw new Exception("Dll already loaded");
             }
 
-            var core = new RetroLite(dll, _manager, _eventProcessor, _renderer);
-            core.Start();
-
-            _coresByName.Add(name, core);
-            
-            if (!_coresBySystem.ContainsKey(system))
+            try
             {
-                _coresBySystem.Add(system, new List<RetroLite>());
-            }
+                var core = new RetroLite(dll, _manager, _eventProcessor, _renderer);
+                core.Start();
 
-            Console.WriteLine($"Core '{name}' for system '{system}' loaded.");
-            _coresBySystem[system].Add(core);
+                _coresByName.Add(name, core);
+
+                if (!_coresBySystem.ContainsKey(system))
+                {
+                    _coresBySystem.Add(system, new List<RetroLite>());
+                }
+
+                _logger.Debug($"Core '{name}' for system '{system}' loaded.");
+                _coresBySystem[system].Add(core);
+            }
+            catch (Exception e)
+            {
+                _logger.Error("Error loading core...", e);
+            }
         }
     }
 }

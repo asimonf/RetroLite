@@ -16,7 +16,7 @@ using SRC_CS;
 
 namespace RetroLite.RetroCore
 {
-    partial class RetroLite : IDisposable, IScene
+    public partial class RetroLite : IDisposable, IScene
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         
@@ -162,6 +162,7 @@ namespace RetroLite.RetroCore
 
             GameLoaded = true;
             _core.RetroGetSystemAvInfo(out _currentSystemAvInfo);
+            _manager.TargetFps = _currentSystemAvInfo.Timing.Fps;
             _videoContextUpdated = true;
             _updateAudioContext();
         }
@@ -451,7 +452,7 @@ namespace RetroLite.RetroCore
 
                 if (_audioBuffer.Glitches > 0)
                 {
-                    Console.Write("x");
+                    // TODO: Do something with this info, maybe log it? maybe paint a pixel?
                     _audioBuffer.Glitches = 0;
                 }
             }

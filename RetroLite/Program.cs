@@ -15,6 +15,8 @@ namespace RetroLite
 {
     internal static class Program
     {
+        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
+
         public static EventBus EventBus { get; } = new EventBus();
         
         [STAThread]
@@ -33,12 +35,11 @@ namespace RetroLite
             SceneManager sceneManager = null;
             try
             {
-                Console.WriteLine("Initializing SDL");
+                _logger.Info("Initializing SDL");
 
                 if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
                 {
-                    Console.WriteLine("SDL Init error");
-                    throw new Exception("SDL Initialization error");
+                    _logger.Error(new Exception("SDL Initialization error"));
                 }
                 
                 // Initialize Components
@@ -61,17 +62,13 @@ namespace RetroLite
 
                 while (sceneManager.Running)
                 {
-                    sceneManager.HandleEvents();
-                    sceneManager.Update();
-                    sceneManager.Draw();
+                    sceneManager.RunLoop();
                 }
                 return 0;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error!!!");
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
+                _logger.Error(e);
                 return 1;
             }
             finally
