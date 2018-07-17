@@ -12,10 +12,10 @@ namespace RetroLite.Video
         public int Height { get; }
         public int Width { get; }
 
-        public SdlRenderer(int width, int height)
+        public SdlRenderer()
         {
-            Width = width;
-            Height = height;
+            Width = 1024;
+            Height = 768;
             
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 

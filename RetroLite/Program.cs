@@ -8,6 +8,7 @@ using RetroLite.RetroCore;
 using RetroLite.Scene;
 using RetroLite.Video;
 using SDL2;
+using SimpleInjector;
 using SRC_CS;
 using Xilium.CefGlue;
 using Xt;
@@ -43,20 +44,34 @@ namespace RetroLite
                     Logger.Error(new Exception("SDL Initialization error"));
                 }
                 
+                // Container
+                var container = new Container();
+                
+                container.RegisterInstance<CefMainArgs>(cefMainArgs);
+                container.RegisterInstance<CefApp>(cefApp);
+                container.RegisterSingleton<EventProcessor>();
+                container.Register<IRenderer, SdlRenderer>(Lifestyle.Singleton);
+                container.RegisterSingleton<SceneManager>();
+                container.RegisterSingleton<MenuRenderer>();
+                container.RegisterSingleton<MenuBrowserClient>();
+                container.RegisterSingleton<RetroCoreCollection>();
+                container.RegisterSingleton<MenuScene>();
+
+                
                 // Initialize Components
-                var eventProcessor = new EventProcessor();
-                IRenderer renderer = new SdlRenderer(1024, 768);
-                sceneManager = new SceneManager(renderer, eventProcessor);
-                var menuRenderer = new MenuRenderer(renderer);
-                var menuBrowserClient = new MenuBrowserClient(menuRenderer);
-                var retroLiteCollection = new RetroCoreCollection(sceneManager, eventProcessor, renderer);
-                var menuScene = new MenuScene(
-                    cefMainArgs, 
-                    sceneManager, 
-                    eventProcessor, 
-                    menuBrowserClient, 
-                    cefApp,
-                    retroLiteCollection);
+//                var eventProcessor = new EventProcessor();
+//                IRenderer renderer = new SdlRenderer();
+//                sceneManager = new SceneManager(renderer, eventProcessor);
+//                var menuRenderer = new MenuRenderer(renderer);
+//                var menuBrowserClient = new MenuBrowserClient(menuRenderer);
+//                var retroLiteCollection = new RetroCoreCollection(sceneManager, eventProcessor, renderer);
+//                var menuScene = new MenuScene(
+//                    cefMainArgs, 
+//                    sceneManager, 
+//                    eventProcessor, 
+//                    menuBrowserClient, 
+//                    cefApp,
+//                    retroLiteCollection);
 
                 sceneManager.ChangeScene(new IntroScene(renderer));
                 sceneManager.Running = true;
