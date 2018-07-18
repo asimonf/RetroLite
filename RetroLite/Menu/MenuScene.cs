@@ -19,9 +19,7 @@ namespace RetroLite.Menu
         private GameControllerAnalog[] _analogs;
         private const int RepeatFrameLimit = 30;
 
-        private readonly int[] _buttonRepeatCounter;
         private readonly GameControllerButton[] _buttons;
-        private readonly GameController _prevControllerState;
         private readonly List<SubscriptionToken> _eventTokenList;
         private readonly CefBrowser _browser;
         private readonly MenuBrowserClient _browserClient;
@@ -31,9 +29,9 @@ namespace RetroLite.Menu
 
         public bool IsLoaded => !_browser.IsLoading;
 
-        private bool _isCoreStarted = false;
-        private bool _isCoreRunning = false;
-        private bool _isMenuOpen = false;
+        private bool _isCoreStarted;
+        private bool _isCoreRunning;
+        private bool _isMenuOpen;
 
         public MenuScene(
             CefMainArgs mainArgs,
@@ -46,8 +44,6 @@ namespace RetroLite.Menu
             // State Initialization
             _buttons = (GameControllerButton[])Enum.GetValues(typeof(GameControllerButton));
             _analogs = (GameControllerAnalog[])Enum.GetValues(typeof(GameControllerAnalog));
-            _prevControllerState = new GameController();
-            _buttonRepeatCounter = new int[_buttons.Length];
             _eventTokenList = new List<SubscriptionToken>();
 
             var settings = new CefSettings { WindowlessRenderingEnabled = true, LogSeverity = CefLogSeverity.Default };
@@ -71,7 +67,7 @@ namespace RetroLite.Menu
                 cefWindowInfo,
                 _browserClient,
                 browserSettings,
-                "http://unixpapa.com/js/testkey.html"
+                "http://retrolite.internal/games"
             );
 
             _eventTokenList.Add(Program.EventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
@@ -150,13 +146,6 @@ namespace RetroLite.Menu
                         currentState == GameControllerButtonState.Up)
                     {
                         Program.StateManager.ScanForGames(Path.Combine(Environment.CurrentDirectory, "roms"));
-                    }
-                    
-                    if (!_isCoreStarted &&
-                        button == GameControllerButton.X &&
-                        currentState == GameControllerButtonState.Up)
-                    {
-                        Console.WriteLine(JsonConvert.SerializeObject(Program.StateManager.GetGameList()));
                     }
 
                     if (!_isCoreStarted &&

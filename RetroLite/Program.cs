@@ -53,7 +53,13 @@ namespace RetroLite
 
                 sceneManager = container.GetInstance<SceneManager>();
 
-                sceneManager.ChangeScene(new IntroScene(container.GetInstance<IRenderer>(), sceneManager, container.GetInstance<MenuScene>()));
+                sceneManager.ChangeScene(
+                    new IntroScene(
+                        container.GetInstance<IRenderer>(), 
+                        sceneManager, 
+                        container.GetInstance<MenuScene>()
+                    )
+                );
                 sceneManager.Running = true;
 
                 while (sceneManager.Running)
@@ -75,11 +81,11 @@ namespace RetroLite
             }
         }
 
-        private static void SetupContainer(CefMainArgs cefMainArgs, MenuCefApp cefApp, Container container)
+        private static void SetupContainer(CefMainArgs cefMainArgs, CefApp cefApp, Container container)
         {
             // Register Cef related instances
             container.RegisterInstance(cefMainArgs);
-            container.RegisterInstance<CefApp>(cefApp);
+            container.RegisterInstance(cefApp);
 
             // Register renderer (TODO: maybe make it configurable?)
             container.Register<IRenderer, SdlRenderer>(Lifestyle.Singleton);

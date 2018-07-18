@@ -8,7 +8,7 @@ using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI.Action
 {
-    class ListGamesAction : IAction
+    internal class ListGamesAction : IAction
     {
         public string Path => "/games";
 

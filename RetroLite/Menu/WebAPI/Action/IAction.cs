@@ -7,7 +7,7 @@ using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI.Action
 {
-    interface IAction
+    public interface IAction
     {
         string Path { get; }
         string Method { get; }

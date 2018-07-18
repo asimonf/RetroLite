@@ -8,11 +8,11 @@ using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI
 {
-    class ApiResourceHandler : CefResourceHandler
+    internal class ApiResourceHandler : CefResourceHandler
     {
-        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private ApiRouter _apiRouter;
+        private readonly ApiRouter _apiRouter;
 
         private ApiResponse _apiResponse;
 
@@ -20,9 +20,6 @@ namespace RetroLite.Menu.WebAPI
 
         private bool _completed;
 
-        /// <summary>
-        /// The total bytes read.
-        /// </summary>
         private int _totalBytesRead;
 
         public ApiResourceHandler(ApiRouter apiRouter)
@@ -75,7 +72,7 @@ namespace RetroLite.Menu.WebAPI
 
                 response.Status = statusCode;
                 response.MimeType = "application/json";
-                response.StatusText = (statusCode < 400) ? "OK" : "";
+                response.StatusText = (statusCode < 400 && statusCode >= 200) ? "OK" : "Error";
             }
             catch (Exception exception)
             {
@@ -85,7 +82,7 @@ namespace RetroLite.Menu.WebAPI
 
         protected override bool ReadResponse(Stream response, int bytesToRead, out int bytesRead, CefCallback callback)
         {
-            int currBytesRead = 0;
+            var currBytesRead = 0;
 
             try
             {

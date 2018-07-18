@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RetroLite.Menu.WebAPI
 {
-    class ApiResponse
+    public class ApiResponse
     {
         public string Data { get; }
         public int StatusCode { get; }

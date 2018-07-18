@@ -78,12 +78,11 @@ namespace RetroLite.DB
                 {
                     _db.Upsert(new Game()
                     {
+                        Id = new Guid(),
                         Name = Path.GetFileNameWithoutExtension(gameFile),
                         Path = gameFile,
                         System = system
                     });
-                    
-                    Console.WriteLine(gameFile);
                 }
             }
         }
@@ -98,6 +97,8 @@ namespace RetroLite.DB
             ScannedForGames = false;
 
             if (_scanGamesTask != null) return;
+
+            _db.Delete<Game>(x => true);
             
             _scanGamesTask = new Task(() => _scanGames(basePath));
             _scanGamesTask.Start();
