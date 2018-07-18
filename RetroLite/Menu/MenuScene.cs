@@ -44,13 +44,13 @@ namespace RetroLite.Menu
             RetroCoreCollection coreCollection)
         {
             // State Initialization
-            _buttons = (GameControllerButton[]) Enum.GetValues(typeof(GameControllerButton));
-            _analogs = (GameControllerAnalog[]) Enum.GetValues(typeof(GameControllerAnalog));
+            _buttons = (GameControllerButton[])Enum.GetValues(typeof(GameControllerButton));
+            _analogs = (GameControllerAnalog[])Enum.GetValues(typeof(GameControllerAnalog));
             _prevControllerState = new GameController();
             _buttonRepeatCounter = new int[_buttons.Length];
             _eventTokenList = new List<SubscriptionToken>();
 
-            var settings = new CefSettings {WindowlessRenderingEnabled = true, LogSeverity = CefLogSeverity.Default};
+            var settings = new CefSettings { WindowlessRenderingEnabled = true, LogSeverity = CefLogSeverity.Default };
 
             CefRuntime.Initialize(mainArgs, settings, menuCeffApp, windowsSandboxInfo: IntPtr.Zero);
 

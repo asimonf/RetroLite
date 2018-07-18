@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Reflection;
 using Redbus;
 using RetroLite.DB;
 using RetroLite.Input;
 using RetroLite.Intro;
 using RetroLite.Menu;
+using RetroLite.Menu.WebAPI;
+using RetroLite.Menu.WebAPI.Action;
 using RetroLite.RetroCore;
 using RetroLite.Scene;
 using RetroLite.Video;
@@ -74,15 +77,25 @@ namespace RetroLite
 
         private static void SetupContainer(CefMainArgs cefMainArgs, MenuCefApp cefApp, Container container)
         {
-            container.RegisterInstance<CefMainArgs>(cefMainArgs);
+            // Register Cef related instances
+            container.RegisterInstance(cefMainArgs);
             container.RegisterInstance<CefApp>(cefApp);
-            container.RegisterSingleton<EventProcessor>();
+
+            // Register renderer (TODO: maybe make it configurable?)
             container.Register<IRenderer, SdlRenderer>(Lifestyle.Singleton);
+
+            // Register main components
+            container.RegisterSingleton<EventProcessor>();
             container.RegisterSingleton<SceneManager>();
             container.RegisterSingleton<MenuRenderer>();
             container.RegisterSingleton<MenuBrowserClient>();
             container.RegisterSingleton<RetroCoreCollection>();
             container.RegisterSingleton<MenuScene>();
+
+            // Register API components
+            container.RegisterSingleton<ApiRouter>();
+            container.Register<CefRequestHandler, ApiRequestHandler>(Lifestyle.Singleton);
+            container.Collection.Register<IAction>(Assembly.GetExecutingAssembly());
         }
     }
 }

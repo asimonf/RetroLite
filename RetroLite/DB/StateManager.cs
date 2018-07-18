@@ -12,7 +12,6 @@ namespace RetroLite.DB
     public class StateManager
     {
         private readonly LiteRepository _db;
-        private readonly List<SubscriptionToken> _eventTokens;
 
         private Task _scanGamesTask = null;
         private Task _initializeTask = null;
@@ -28,11 +27,6 @@ namespace RetroLite.DB
         ~StateManager()
         {
             _db.Dispose();
-            
-            foreach (var token in _eventTokens)
-            {
-                Program.EventBus.Unsubscribe(token);
-            }
         }
         
         private void _initialize()

@@ -85,6 +85,12 @@
     <Compile Include="DB\Entity\System.cs" />
     <Compile Include="Event\LoadCoreEvent.cs" />
     <Compile Include="Event\OpenMenuEvent.cs" />
+    <Compile Include="Menu\WebAPI\Action\ListGamesAction.cs" />
+    <Compile Include="Menu\WebAPI\Action\IAction.cs" />
+    <Compile Include="Menu\WebAPI\ApiRequestHandler.cs" />
+    <Compile Include="Menu\WebAPI\ApiResponse.cs" />
+    <Compile Include="Menu\WebAPI\ApiRouter.cs" />
+    <Compile Include="Menu\WebAPI\ApiResourceHandler.cs" />
     <Compile Include="RetroCore\CoreVariable.cs" />
     <Compile Include="RetroCore\InputDescriptor.cs" />
     <Compile Include="RetroCore\RetroCore.cs" />
