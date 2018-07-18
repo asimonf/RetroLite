@@ -8,7 +8,6 @@ using NLog;
 using RetroLite.Audio;
 using RetroLite.Event;
 using RetroLite.Input;
-using RetroLite.Menu;
 using RetroLite.Scene;
 using RetroLite.Video;
 using SDL2;

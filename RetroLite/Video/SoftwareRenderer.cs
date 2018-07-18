@@ -7,7 +7,6 @@ namespace RetroLite.Video
     {
         private IntPtr _sdlSurface;
         private IntPtr _sdlRenderer;
-        private IntPtr _framebuffer;
 
         public int Height { get; }
         public int Width { get; }
@@ -35,7 +34,6 @@ namespace RetroLite.Video
         ~SoftwareRenderer()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
-            SDL.SDL_FreeSurface(_framebuffer);
         }
 
         public int GetWidth()

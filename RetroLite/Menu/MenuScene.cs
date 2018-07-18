@@ -75,7 +75,6 @@ namespace RetroLite.Menu
             );
 
             _eventTokenList.Add(Program.EventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
-            _eventTokenList.Add(Program.EventBus.Subscribe<IntroFinishedEvent>(OnIntroFinishedEvent));
         }
 
         ~MenuScene()
@@ -96,12 +95,6 @@ namespace RetroLite.Menu
                 _isMenuOpen = true;
                 _eventProcessor.ResetControllers();
             }
-        }
-
-        private void OnIntroFinishedEvent(IntroFinishedEvent introFinishedEvent)
-        {
-            _manager.ChangeScene(this);
-            _eventProcessor.ResetControllers();
         }
 
         public void Start()

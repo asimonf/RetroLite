@@ -1,17 +1,16 @@
-﻿using SDL2;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using RetroLite.Input;
 using RetroLite.Video;
-using Xilium.CefGlue;
 using Xt;
 
 namespace RetroLite.Scene
 {
     public class SceneManager
     {
+        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
+
         private readonly Stack<IScene> _scenes;
 
         private readonly IRenderer _renderer;
@@ -20,16 +19,12 @@ namespace RetroLite.Scene
         private readonly XtAudio _xtAudio;
         private readonly XtDevice _xtDevice;
         private readonly XtStream _xtStream;
-        
-        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
         public bool Running { get; set; } = false;
         
         public XtFormat AudioFormat { get; }
         public IScene CurrentScene => _scenes.Count > 0 ? _scenes.Peek() : null;
 
-        private long _fpsFrameCount = 0;
-        private long _fpsStartTime = 0;
         private Stopwatch _nopTimer;
         
         public double TargetFps { get; set; } = 60;
@@ -139,6 +134,8 @@ namespace RetroLite.Scene
             if (!(targetFrametime > elapsedTime)) return;
             
             var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
+
+            // Busy loop. This is to increase accuracy of the timing function
             _nopTimer.Restart();
             while (_nopTimer.ElapsedTicks < durationTicks)
             {

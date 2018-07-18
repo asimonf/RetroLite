@@ -15,10 +15,14 @@ namespace RetroLite.Intro
         private IntPtr _logo;
 
         private readonly IRenderer _renderer;
+        private readonly SceneManager _manager;
+        private readonly IScene _nextScene;
 
-        public IntroScene(IRenderer renderer)
+        public IntroScene(IRenderer renderer, SceneManager manager, IScene nextScene)
         {
             _renderer = renderer;
+            _manager = manager;
+            _nextScene = nextScene;
         }
 
         public void Draw()
@@ -71,7 +75,8 @@ namespace RetroLite.Intro
                 return;
             }
             
-            Program.EventBus.Publish(new IntroFinishedEvent());
+            _renderer.Screenshot();
+            _manager.ChangeScene(_nextScene);
         }
     }
 }

@@ -34,7 +34,6 @@ namespace RetroLite.Video
             _framebuffer = SDL.SDL_GetWindowSurface(_sdlWindow);
             _sdlRenderer = SDL.SDL_CreateRenderer(_sdlWindow, -1,
                 SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
-//                SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC |
                 SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE);
 
             if (_sdlRenderer == null)

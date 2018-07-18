@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using RetroLite.Scene;
 using RetroLite.Video;
 using SDL2;
 using Xilium.CefGlue;
