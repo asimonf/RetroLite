@@ -67,7 +67,7 @@ namespace RetroLite.Menu
                 cefWindowInfo,
                 _browserClient,
                 browserSettings,
-                "http://retrolite.internal/games"
+                "http://localhost:4200"
             );
 
             _eventTokenList.Add(Program.EventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
@@ -152,7 +152,7 @@ namespace RetroLite.Menu
                         button == GameControllerButton.B &&
                         currentState == GameControllerButtonState.Up &&
                         _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory,
-                            Program.StateManager.GetGameList()[0].Path)))
+                            Program.StateManager.GetGameList()[3].Path)))
                     {
                         _isCoreStarted = true;
                         _isCoreRunning = true;

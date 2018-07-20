@@ -115,7 +115,7 @@ namespace RetroLite.Scene
 
         private void Draw()
         {
-            _renderer.SetRenderDrawColor(255, 255, 255, 255);
+            _renderer.SetRenderDrawColor(0, 0, 0, 255);
             _renderer.RenderClear();
             CurrentScene?.Draw();
             _renderer.RenderPresent();

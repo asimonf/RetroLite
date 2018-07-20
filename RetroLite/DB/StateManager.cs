@@ -117,5 +117,17 @@ namespace RetroLite.DB
             return _db.Query<Game>()
                 .ToList();
         }
+
+        public IList<Core> GetCoreList()
+        {
+            return _db.Query<Core>()
+                .ToList();
+        }
+        
+        public IList<Entity.System> GetSystemList()
+        {
+            return _db.Query<Entity.System>()
+                .ToList();
+        }
     }
 }
