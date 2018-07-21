@@ -12,6 +12,12 @@ using Xilium.CefGlue;
 
 namespace RetroLite.Menu
 {
+    public enum BrowserEvent
+    {
+        OpenMenu,
+        CloseMenu
+    }
+    
     public class MenuScene : IScene
     {
         private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
@@ -90,6 +96,7 @@ namespace RetroLite.Menu
                 _isCoreRunning = false;
                 _isMenuOpen = true;
                 _eventProcessor.ResetControllers();
+                _sendBrowserEvent(BrowserEvent.OpenMenu);
             }
         }
 
@@ -158,6 +165,7 @@ namespace RetroLite.Menu
                         _isCoreRunning = true;
                         _isMenuOpen = false;
                         _eventProcessor.ResetControllers();
+                        _sendBrowserEvent(BrowserEvent.CloseMenu);
                     }
 
                     if (button == GameControllerButton.Guide &&
@@ -169,6 +177,7 @@ namespace RetroLite.Menu
                         _isCoreRunning = true;
                         _logger.Debug("Closing Menu");
                         _eventProcessor.ResetControllers();
+                        _sendBrowserEvent(BrowserEvent.CloseMenu);
                     }
                 }
             }
@@ -183,7 +192,7 @@ namespace RetroLite.Menu
         public void Draw()
         {
             if (_isCoreStarted) _coreCollection.Draw();
-            if (_isMenuOpen) _browserClient.Draw();
+            _browserClient.Draw();
         }
 
         public void GetAudioData(IntPtr buffer, int frames)
@@ -192,6 +201,20 @@ namespace RetroLite.Menu
             else for(var i=0; i < frames * 2 * 2; i++)
             {
                 Marshal.WriteByte(buffer, i, 0);
+            }
+        }
+
+        private void _sendBrowserEvent(BrowserEvent browserEvent)
+        {
+            var frame = _browser.GetMainFrame();
+            switch (browserEvent)
+            {
+                case BrowserEvent.OpenMenu:
+                    frame.ExecuteJavaScript("document.dispatchEvent(new Event('openmenu'))", frame.Url, 0);
+                    break;
+                case BrowserEvent.CloseMenu:
+                    frame.ExecuteJavaScript("document.dispatchEvent(new Event('closemenu'))", frame.Url, 0);
+                    break;
             }
         }
     }
