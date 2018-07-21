@@ -1,9 +1,10 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from './app.component';
 import { BackgroundComponent } from './background/background.component';
+import { MenuComponent } from './menu/menu.component';
 
 
 @NgModule({
@@ -12,7 +13,8 @@ import { BackgroundComponent } from './background/background.component';
     BackgroundComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
