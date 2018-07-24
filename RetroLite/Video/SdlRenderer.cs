@@ -5,16 +5,16 @@ namespace RetroLite.Video
 {
     public class SdlRenderer : IRenderer
     {
-        private IntPtr _sdlWindow;
-        private IntPtr _sdlRenderer;
+        private readonly IntPtr _sdlWindow;
+        private readonly IntPtr _sdlRenderer;
 
         public int Height { get; }
         public int Width { get; }
 
         public SdlRenderer()
         {
-            Width = 1600;
-            Height = 900;
+            Width = 800;
+            Height = 600;
             
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 
@@ -43,7 +43,7 @@ namespace RetroLite.Video
             SetRenderDrawBlendMode(SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
 
-        ~SdlRenderer()
+        public void Dispose()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
             SDL.SDL_DestroyWindow(_sdlWindow);
@@ -132,6 +132,11 @@ namespace RetroLite.Video
         public void Screenshot()
         {
             
+        }
+
+        public void SetTitleText(string title)
+        {
+            SDL.SDL_SetWindowTitle(_sdlWindow, title);
         }
     }
 }

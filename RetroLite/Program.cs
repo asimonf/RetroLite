@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Reflection;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using Redbus;
 using RetroLite.DB;
 using RetroLite.Input;
@@ -22,6 +25,8 @@ namespace RetroLite
 
         public static EventBus EventBus { get; } = new EventBus();
         public static StateManager StateManager { get; } = new StateManager();
+
+        public static bool Running { get; set; } = true;
         
         [STAThread]
         public static int Main(string[] args)
@@ -36,36 +41,43 @@ namespace RetroLite
                 return res;
             }
 
-            SceneManager sceneManager = null;
             try
             {
+                InitializeLogger();
+                
                 _logger.Info("Initializing SDL");
 
                 if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
                 {
                     _logger.Error(new Exception("SDL Initialization error"));
                 }
+                
+                if (SDL_ttf.TTF_Init() != 0)
+                {
+                    _logger.Error(new Exception("TTF Initialization error"));
+                }
 
                 // Container
-                var container = new Container();
-
-                SetupContainer(cefMainArgs, cefApp, container);
-
-                sceneManager = container.GetInstance<SceneManager>();
-
-                sceneManager.ChangeScene(
-                    new IntroScene(
-                        container.GetInstance<IRenderer>(), 
-                        sceneManager, 
-                        container.GetInstance<MenuScene>()
-                    )
-                );
-                sceneManager.Running = true;
-
-                while (sceneManager.Running)
+                using (var container = new Container())
                 {
-                    sceneManager.RunLoop();
+                    SetupContainer(cefMainArgs, cefApp, container);
+    
+                    var sceneManager = container.GetInstance<SceneManager>();
+    
+                    sceneManager.ChangeScene(
+                        new IntroScene(
+                            container.GetInstance<IRenderer>(), 
+                            sceneManager, 
+                            container.GetInstance<MenuScene>()
+                        )
+                    );
+    
+                    while (Running)
+                    {
+                        sceneManager.RunLoop();
+                    }
                 }
+
                 return 0;
             }
             catch (Exception e)
@@ -75,9 +87,8 @@ namespace RetroLite
             }
             finally
             {
-                sceneManager?.Cleanup();
+                SDL_ttf.TTF_Quit();
                 SDL.SDL_Quit();                
-                CefRuntime.Shutdown();
             }
         }
 
@@ -102,6 +113,17 @@ namespace RetroLite
             container.RegisterSingleton<ApiRouter>();
             container.Register<CefRequestHandler, ApiRequestHandler>(Lifestyle.Singleton);
             container.Collection.Register<IAction>(Assembly.GetExecutingAssembly());
+        }
+        
+        private static unsafe void InitializeLogger()
+        {
+            var loggingConfiguration = new LoggingConfiguration();
+            var consoleTarget = new ColoredConsoleTarget();
+            consoleTarget.Layout = "${date: format = HH\\:MM\\:ss}: ${message}";
+            loggingConfiguration.AddTarget("console", consoleTarget);
+            var rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
+            loggingConfiguration.LoggingRules.Add(rule1);
+            LogManager.Configuration = loggingConfiguration;
         }
     }
 }

@@ -124,7 +124,7 @@ namespace RetroLite.RetroCore
 
         private bool _shutdown()
         {
-            _manager.Running = false;
+            Program.Running = false;
 
             return true;
         }
@@ -205,6 +205,12 @@ namespace RetroLite.RetroCore
             }
 
             var coreVariable = _coreVariables[variable.Key];
+
+            if (variable.Key == "beetle_psx_skipbios")
+            {
+                _logger.Debug("Changing skipbios");
+                coreVariable.Value = coreVariable.ExpectedValues[0];
+            }
 
             variable.value = Marshal.StringToHGlobalAnsi(coreVariable.Value);
 

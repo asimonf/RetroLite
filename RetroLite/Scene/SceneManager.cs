@@ -7,7 +7,7 @@ using Xt;
 
 namespace RetroLite.Scene
 {
-    public class SceneManager
+    public class SceneManager : IDisposable
     {
         private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -20,8 +20,6 @@ namespace RetroLite.Scene
         private readonly XtDevice _xtDevice;
         private readonly XtStream _xtStream;
 
-        public bool Running { get; set; } = false;
-        
         public XtFormat AudioFormat { get; }
         public IScene CurrentScene => _scenes.Count > 0 ? _scenes.Peek() : null;
 
@@ -47,15 +45,7 @@ namespace RetroLite.Scene
             _nopTimer.Start();
         }
 
-        ~SceneManager()
-        {
-            _xtStream.Stop();
-            _xtStream.Dispose();
-            _xtDevice.Dispose();
-            _xtAudio.Dispose();
-        }
-
-        public void Cleanup()
+        public void Dispose()
         {
             while (_scenes.Count > 0)
             {
@@ -63,6 +53,12 @@ namespace RetroLite.Scene
                 scene.Pause();
                 scene.Stop();
             }
+            _xtStream.Stop();
+            _xtStream.Dispose();
+            _xtDevice.Dispose();
+            _xtAudio.Dispose();
+            
+            Console.WriteLine("Disposed");
         }
 
         public void ChangeScene(IScene scene)
@@ -131,21 +127,22 @@ namespace RetroLite.Scene
             var frameTicks = Stopwatch.GetTimestamp() - frameStart;
             var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
             var targetFrametime = (1000.0 / TargetFps);
+            
+            _renderer.SetTitleText((elapsedTime).ToString());
 
             if (!(targetFrametime > elapsedTime))
             {
-                Console.WriteLine(elapsedTime);
                 return;
             }
             
-//            var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
-//
-//            // Busy loop. This is to increase accuracy of the timing function
-//            _nopTimer.Restart();
-//            while (_nopTimer.ElapsedTicks < durationTicks)
-//            {
-//
-//            }
+            var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
+
+            // Busy loop. This is to increase accuracy of the timing function
+            _nopTimer.Restart();
+            while (_nopTimer.ElapsedTicks < durationTicks)
+            {
+
+            }
         }
         
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,

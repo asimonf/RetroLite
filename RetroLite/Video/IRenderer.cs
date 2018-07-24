@@ -3,7 +3,7 @@ using SDL2;
 
 namespace RetroLite.Video
 {
-    public interface IRenderer
+    public interface IRenderer : IDisposable
     {
         int Width { get; }
         int Height { get; }
@@ -38,5 +38,7 @@ namespace RetroLite.Video
         bool SetTextureBlendMode(IntPtr texture, SDL.SDL_BlendMode mode);
 
         void Screenshot();
+
+        void SetTitleText(string title);
     }
 }

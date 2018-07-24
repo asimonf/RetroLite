@@ -130,6 +130,7 @@ namespace RetroLite.Input
                         break;
                     //User requests quit
                     case SDL.SDL_EventType.SDL_QUIT:
+                        Program.Running = false;
                         break;
                 }
             }

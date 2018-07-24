@@ -96,6 +96,8 @@ namespace RetroLite.Menu
             }
 
             _eventTokenList.Clear();
+            
+            CefRuntime.Shutdown();
         }
 
         private void OnOpenMenuEvent(OpenMenuEvent openMenuEvent)
@@ -168,7 +170,7 @@ namespace RetroLite.Menu
                         button == GameControllerButton.B &&
                         currentState == GameControllerButtonState.Up &&
                         _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory,
-                            Program.StateManager.GetGameList()[3].Path)))
+                            Program.StateManager.GetGameList()[1].Path)))
                     {
                         _isCoreStarted = true;
                         _isCoreRunning = true;

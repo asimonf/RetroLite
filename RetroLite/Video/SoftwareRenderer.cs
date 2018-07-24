@@ -5,8 +5,8 @@ namespace RetroLite.Video
 {
     public class SoftwareRenderer : IRenderer
     {
-        private IntPtr _sdlSurface;
-        private IntPtr _sdlRenderer;
+        private readonly IntPtr _sdlSurface;
+        private readonly IntPtr _sdlRenderer;
 
         public int Height { get; }
         public int Width { get; }
@@ -31,19 +31,9 @@ namespace RetroLite.Video
             }
         }
 
-        ~SoftwareRenderer()
+        public void Dispose()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
-        }
-
-        public int GetWidth()
-        {
-            return Width;
-        }
-
-        public int GetHeight()
-        {
-            return Height;
         }
 
         public IntPtr LoadTextureFromFile(string path)
@@ -128,6 +118,11 @@ namespace RetroLite.Video
         public bool SetTextureBlendMode(IntPtr texture, SDL.SDL_BlendMode mode)
         {
             return SDL.SDL_SetTextureBlendMode(texture, mode) == 0;
+        }
+
+        public void SetTitleText(string title)
+        {
+            
         }
     }
 }
