@@ -7,15 +7,14 @@ namespace RetroLite.Video
     {
         private IntPtr _sdlWindow;
         private IntPtr _sdlRenderer;
-        private IntPtr _framebuffer;
 
         public int Height { get; }
         public int Width { get; }
 
         public SdlRenderer()
         {
-            Width = 1024;
-            Height = 768;
+            Width = 1600;
+            Height = 900;
             
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 
@@ -31,9 +30,9 @@ namespace RetroLite.Video
                 throw new Exception("SDL Window Initialization Error");
             }
 
-            _framebuffer = SDL.SDL_GetWindowSurface(_sdlWindow);
             _sdlRenderer = SDL.SDL_CreateRenderer(_sdlWindow, -1,
                 SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
+//                SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC | 
                 SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE);
 
             if (_sdlRenderer == null)

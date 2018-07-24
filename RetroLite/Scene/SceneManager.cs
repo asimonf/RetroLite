@@ -127,20 +127,25 @@ namespace RetroLite.Scene
             HandleEvents();
             Update();
             Draw();
+            GC.Collect();
             var frameTicks = Stopwatch.GetTimestamp() - frameStart;
             var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
             var targetFrametime = (1000.0 / TargetFps);
-            
-            if (!(targetFrametime > elapsedTime)) return;
-            
-            var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
 
-            // Busy loop. This is to increase accuracy of the timing function
-            _nopTimer.Restart();
-            while (_nopTimer.ElapsedTicks < durationTicks)
+            if (!(targetFrametime > elapsedTime))
             {
-
+                Console.WriteLine(elapsedTime);
+                return;
             }
+            
+//            var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
+//
+//            // Busy loop. This is to increase accuracy of the timing function
+//            _nopTimer.Restart();
+//            while (_nopTimer.ElapsedTicks < durationTicks)
+//            {
+//
+//            }
         }
         
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,

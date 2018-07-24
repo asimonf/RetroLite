@@ -15,6 +15,9 @@ namespace RetroLite.Input
 
         public GameController this[int port] => _ports[port];
 
+        public int X { get; private set; } = 0;
+        public int Y { get; private set; } = 0;
+
         public EventProcessor()
         {
             _gameControllersById = new Dictionary<int, GameController>();
@@ -120,6 +123,10 @@ namespace RetroLite.Input
                     case SDL.SDL_EventType.SDL_KEYDOWN:
                     case SDL.SDL_EventType.SDL_KEYUP:
                         _ports[0].ProcessKeyboardEvent(e.key);
+                        break;
+                    case SDL.SDL_EventType.SDL_MOUSEMOTION:
+                        X = e.motion.x;
+                        Y = e.motion.y;
                         break;
                     //User requests quit
                     case SDL.SDL_EventType.SDL_QUIT:

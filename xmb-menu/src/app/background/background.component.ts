@@ -177,7 +177,7 @@ export class BackgroundComponent implements AfterViewInit {
     const regl = createREGL({
       container: this.elRef.nativeElement,
       attributes: {
-        antialias: true
+        antialias: false
       },
       optionalExtensions: ['EXT_disjoint_timer_query'],
       profile: false

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Redbus;
 using RetroLite.Event;
@@ -52,17 +54,23 @@ namespace RetroLite.Menu
             _analogs = (GameControllerAnalog[])Enum.GetValues(typeof(GameControllerAnalog));
             _eventTokenList = new List<SubscriptionToken>();
 
-            var settings = new CefSettings { WindowlessRenderingEnabled = true, LogSeverity = CefLogSeverity.Default };
+            var settings = new CefSettings
+            {
+                WindowlessRenderingEnabled = true, 
+                LogSeverity = CefLogSeverity.Disable,
+                NoSandbox = true,
+                SingleProcess = true
+            };
 
             CefRuntime.Initialize(mainArgs, settings, menuCeffApp, windowsSandboxInfo: IntPtr.Zero);
 
             // Instruct CEF to not render to a window at all.
             var cefWindowInfo = CefWindowInfo.Create();
-            cefWindowInfo.SetAsWindowless(parentHandle: IntPtr.Zero, transparent: true);
+            cefWindowInfo.SetAsWindowless(parentHandle: IntPtr.Zero, transparent: false);
 
             var browserSettings = new CefBrowserSettings()
             {
-                WindowlessFrameRate = 60
+                WindowlessFrameRate = 60,
             };
 
             _manager = manager;
@@ -74,6 +82,7 @@ namespace RetroLite.Menu
                 _browserClient,
                 browserSettings,
                 "http://localhost:4200"
+//                "https://browserbench.org/MotionMark/"
             );
 
             _eventTokenList.Add(Program.EventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
@@ -179,14 +188,30 @@ namespace RetroLite.Menu
                         _eventProcessor.ResetControllers();
                         _sendBrowserEvent(BrowserEvent.CloseMenu);
                     }
+
+                    if (button == GameControllerButton.Start &&
+                        currentState == GameControllerButtonState.Up)
+                    {
+                        _browser.GetHost().SendMouseClickEvent(new CefMouseEvent()
+                        {
+                            X = _eventProcessor.X,
+                            Y = _eventProcessor.Y
+                        }, CefMouseButtonType.Left, false, 1);
+                        
+                        _browser.GetHost().SendMouseClickEvent(new CefMouseEvent()
+                        {
+                            X = _eventProcessor.X,
+                            Y = _eventProcessor.Y
+                        }, CefMouseButtonType.Left, true, 1);
+                    }
                 }
             }
         }
 
         public void Update()
         {
-            if (_isCoreRunning) _coreCollection.Update();
             CefRuntime.DoMessageLoopWork();
+            if (_isCoreRunning) _coreCollection.Update();
         }
 
         public void Draw()
@@ -210,10 +235,10 @@ namespace RetroLite.Menu
             switch (browserEvent)
             {
                 case BrowserEvent.OpenMenu:
-                    frame.ExecuteJavaScript("document.dispatchEvent(new Event('openmenu'))", frame.Url, 0);
+                    frame.ExecuteJavaScript("setTimeout(() => document.dispatchEvent(new Event('openmenu')), 0)", frame.Url, 0);
                     break;
                 case BrowserEvent.CloseMenu:
-                    frame.ExecuteJavaScript("document.dispatchEvent(new Event('closemenu'))", frame.Url, 0);
+                    frame.ExecuteJavaScript("setTimeout(() => document.dispatchEvent(new Event('closemenu')), 0)", frame.Url, 0);
                     break;
             }
         }

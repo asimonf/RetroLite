@@ -15,12 +15,10 @@ import {
   animations: [
     trigger('state', [
       state('inactive', style({
-        opacity: 0,
-        transform: 'scale(1.1)'
+        opacity: 0
       })),
       state('active',   style({
-        opacity: 1,
-        transform: 'scale(1)'
+        opacity: 1
       })),
       transition('active <=> inactive', animate('1000ms ease'))
     ])
