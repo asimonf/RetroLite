@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Redbus;
+using RetroLite.DB;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.RetroCore;
@@ -32,6 +33,7 @@ namespace RetroLite.Menu
         private readonly CefBrowser _browser;
         private readonly MenuBrowserClient _browserClient;
         private readonly SceneManager _manager;
+        private readonly StateManager _stateManager;
         private readonly EventProcessor _eventProcessor;
         private readonly RetroCoreCollection _coreCollection;
 
@@ -47,7 +49,9 @@ namespace RetroLite.Menu
             EventProcessor eventProcessor,
             MenuBrowserClient browserClient,
             CefApp menuCeffApp,
-            RetroCoreCollection coreCollection)
+            RetroCoreCollection coreCollection,
+            StateManager stateManager
+        )
         {
             // State Initialization
             _buttons = (GameControllerButton[])Enum.GetValues(typeof(GameControllerButton));
@@ -58,8 +62,7 @@ namespace RetroLite.Menu
             {
                 WindowlessRenderingEnabled = true, 
                 LogSeverity = CefLogSeverity.Disable,
-                NoSandbox = true,
-                SingleProcess = true
+                NoSandbox = true
             };
 
             CefRuntime.Initialize(mainArgs, settings, menuCeffApp, windowsSandboxInfo: IntPtr.Zero);
@@ -77,6 +80,7 @@ namespace RetroLite.Menu
             _eventProcessor = eventProcessor;
             _browserClient = browserClient;
             _coreCollection = coreCollection;
+            _stateManager = stateManager;
             _browser = CefBrowserHost.CreateBrowserSync(
                 cefWindowInfo,
                 _browserClient,
@@ -158,25 +162,18 @@ namespace RetroLite.Menu
                     };
 
                     _browser.GetHost().SendKeyEvent(cefKeyEvent);
-                    
-                    if (!_isCoreStarted &&
-                        button == GameControllerButton.A &&
-                        currentState == GameControllerButtonState.Up)
-                    {
-                        Program.StateManager.ScanForGames(Path.Combine(Environment.CurrentDirectory, "roms"));
-                    }
 
                     if (!_isCoreStarted &&
                         button == GameControllerButton.B &&
-                        currentState == GameControllerButtonState.Up &&
-                        _coreCollection.LoadGame(Path.Combine(Environment.CurrentDirectory,
-                            Program.StateManager.GetGameList()[1].Path)))
+                        currentState == GameControllerButtonState.Up )
                     {
+                        _coreCollection.LoadGame(_stateManager.GetGameList()[1].Path);
                         _isCoreStarted = true;
                         _isCoreRunning = true;
                         _isMenuOpen = false;
                         _eventProcessor.ResetControllers();
                         _sendBrowserEvent(BrowserEvent.CloseMenu);
+                        GC.Collect();
                     }
 
                     if (button == GameControllerButton.Guide &&

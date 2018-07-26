@@ -197,6 +197,8 @@ namespace RetroLite.RetroCore
         private bool _getVariable(RetroVariable* variablePtr)
         {
             var variable = *variablePtr;
+            
+            _logger.Debug($"Core asking for variable {variable.Key}");
 
             if (!_coreVariables.ContainsKey(variable.Key))
             {
@@ -206,13 +208,7 @@ namespace RetroLite.RetroCore
 
             var coreVariable = _coreVariables[variable.Key];
 
-            if (variable.Key == "beetle_psx_skipbios")
-            {
-                _logger.Debug("Changing skipbios");
-                coreVariable.Value = coreVariable.ExpectedValues[0];
-            }
-
-            variable.value = Marshal.StringToHGlobalAnsi(coreVariable.Value);
+            variable.value = IntPtr.Zero;
 
             *variablePtr = variable;
 

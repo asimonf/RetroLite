@@ -22,7 +22,7 @@ namespace RetroLite.Video
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
                 Width, 
                 Height, 
-                SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS
+                SDL.SDL_WindowFlags.SDL_WINDOW_VULKAN
             );
 
             if (_sdlWindow == null)

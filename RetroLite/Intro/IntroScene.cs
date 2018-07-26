@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using RetroLite.DB;
 using RetroLite.Event;
 using RetroLite.Menu;
 using RetroLite.Scene;
@@ -17,12 +18,16 @@ namespace RetroLite.Intro
         private readonly IRenderer _renderer;
         private readonly SceneManager _manager;
         private readonly IScene _nextScene;
+        private StateManager _stateManager;
 
-        public IntroScene(IRenderer renderer, SceneManager manager, IScene nextScene)
+        private Task _initializationTask, _gameScanTask;
+
+        public IntroScene(IRenderer renderer, SceneManager manager, IScene nextScene, StateManager stateManager)
         {
             _renderer = renderer;
             _manager = manager;
             _nextScene = nextScene;
+            _stateManager = stateManager;
         }
 
         public void Draw()
@@ -52,7 +57,9 @@ namespace RetroLite.Intro
         public void Start()
         {
             _logo = _renderer.LoadTextureFromFile(Path.Combine(Environment.CurrentDirectory, "assets", "logo.png"));
-            Program.StateManager.Initialize();
+            
+            if (_initializationTask == null)
+                _initializationTask = _stateManager.Initialize();
         }
         
         public void Stop()
@@ -70,12 +77,22 @@ namespace RetroLite.Intro
 
         public void Update()
         {
-            if (!Program.StateManager.Initialized)
+            if (_initializationTask == null || !_initializationTask.IsCompleted)
+            { 
+                return;
+            }
+
+            if (_initializationTask.IsCompleted && _gameScanTask == null)
+            {
+                _gameScanTask = _stateManager.ScanForGames(Path.Combine(Environment.CurrentDirectory, "roms"));
+                return;
+            }
+
+            if (!_gameScanTask.IsCompleted)
             {
                 return;
             }
             
-            _renderer.Screenshot();
             _manager.ChangeScene(_nextScene);
         }
     }

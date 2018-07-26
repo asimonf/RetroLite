@@ -6,5 +6,6 @@ namespace RetroLite.DB.Entity
     {
         [BsonId]
         public string Name { get; set; }
+        public string[] ValidExtensions { get; set; }
     }
 }

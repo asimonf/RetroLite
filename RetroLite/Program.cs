@@ -24,7 +24,6 @@ namespace RetroLite
         private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
         public static EventBus EventBus { get; } = new EventBus();
-        public static StateManager StateManager { get; } = new StateManager();
 
         public static bool Running { get; set; } = true;
         
@@ -68,7 +67,8 @@ namespace RetroLite
                         new IntroScene(
                             container.GetInstance<IRenderer>(), 
                             sceneManager, 
-                            container.GetInstance<MenuScene>()
+                            container.GetInstance<MenuScene>(),
+                            container.GetInstance<StateManager>()
                         )
                     );
     
@@ -108,6 +108,7 @@ namespace RetroLite
             container.RegisterSingleton<MenuBrowserClient>();
             container.RegisterSingleton<RetroCoreCollection>();
             container.RegisterSingleton<MenuScene>();
+            container.RegisterSingleton<StateManager>();
 
             // Register API components
             container.RegisterSingleton<ApiRouter>();

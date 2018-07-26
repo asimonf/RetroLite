@@ -33,6 +33,8 @@ namespace RetroLite.RetroCore
 
         public bool GameLoaded { get; private set; }
 
+        public Core LowLevelCore => _core;
+
         #region Video Related Fields
 
         private RetroPixelFormat _pixelFormat;
@@ -176,7 +178,7 @@ namespace RetroLite.RetroCore
 
         private void _videoRefresh(IntPtr data, uint width, uint height, ulong pitch)
         {
-            if (_videoContextUpdated || height != _framebufferHeight || width != _framebufferWidth)
+            if (IntPtr.Zero == _framebuffer || _videoContextUpdated || height != _framebufferHeight || width != _framebufferWidth)
             {
                 _videoContextUpdated = false;
                 _framebufferHeight = (int) height;
@@ -184,8 +186,9 @@ namespace RetroLite.RetroCore
                 _recreateFramebuffer();
             }
 
-            if (IntPtr.Zero == data)
+            if (IntPtr.Zero == data || IntPtr.Zero == _framebuffer)
             {
+                _logger.Warn($"Invalid framebuffer in '{this._coreName}'");
                 return;
             }
 
@@ -199,7 +202,6 @@ namespace RetroLite.RetroCore
 
                     for (ulong i = 0; i < height; i++)
                     {
-
                         Buffer.MemoryCopy((byte*) data.ToPointer() + i * pitch,
                             (byte*) destination.ToPointer() + i * (ulong) destinationPitch, width * bytesPerPixel,
                             width * bytesPerPixel);

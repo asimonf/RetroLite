@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using RetroLite.Input;
 using RetroLite.Video;
 using Xt;
@@ -9,7 +10,7 @@ namespace RetroLite.Scene
 {
     public class SceneManager : IDisposable
     {
-        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly Stack<IScene> _scenes;
 
@@ -59,6 +60,30 @@ namespace RetroLite.Scene
             _xtAudio.Dispose();
             
             Console.WriteLine("Disposed");
+        }
+        
+        public RetroCore.RetroCore CreateRetroCore(string dll, string system)
+        {
+            Logger.Debug($"Loading core {dll}");
+            var name = Path.GetFileNameWithoutExtension(dll);
+
+            Debug.Assert(name != null, nameof(name) + " != null");
+
+            try
+            {
+                var core = new RetroCore.RetroCore(dll, this, _eventProcessor, _renderer);
+                core.Start();
+
+                Logger.Debug($"Core '{name}' for system '{system}' loaded.");
+
+                return core;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Error loading core...");
+
+                return null;
+            }
         }
 
         public void ChangeScene(IScene scene)
@@ -123,26 +148,17 @@ namespace RetroLite.Scene
             HandleEvents();
             Update();
             Draw();
-            GC.Collect();
             var frameTicks = Stopwatch.GetTimestamp() - frameStart;
             var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
             var targetFrametime = (1000.0 / TargetFps);
             
-            _renderer.SetTitleText((elapsedTime).ToString());
-
-            if (!(targetFrametime > elapsedTime))
-            {
-                return;
-            }
+            if (!(targetFrametime > elapsedTime)) return;
             
             var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
 
             // Busy loop. This is to increase accuracy of the timing function
             _nopTimer.Restart();
-            while (_nopTimer.ElapsedTicks < durationTicks)
-            {
-
-            }
+            while (_nopTimer.ElapsedTicks < durationTicks) ;
         }
         
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,
@@ -153,7 +169,7 @@ namespace RetroLite.Scene
         
         private void XRunCallback(int index, object user)
         {
-            _logger.Warn("Over/Underflow detected");
+            Logger.Warn("Over/Underflow detected");
         }
         
         private void _traceCallback(XtLevel level, string message)
@@ -161,20 +177,20 @@ namespace RetroLite.Scene
             switch (level)
             {
                 case XtLevel.Info:
-                    _logger.Info(message);
+                    Logger.Info(message);
                     break;
                 case XtLevel.Error:
-                    _logger.Error(message);
+                    Logger.Error(message);
                     break;
                 case XtLevel.Fatal:
-                    _logger.Fatal(message);
+                    Logger.Fatal(message);
                     break;
             }
         }
 
         private void _fatalCallback()
         {
-            _logger.Fatal("Fatal error in audio driver");
+            Logger.Fatal("Fatal error in audio driver");
         }
     }
 }

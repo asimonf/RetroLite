@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RetroLite.DB;
 using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI.Action
@@ -14,9 +15,16 @@ namespace RetroLite.Menu.WebAPI.Action
 
         public string Method => "GET";
 
+        private StateManager _stateManager;
+
+        public ListCoresAction(StateManager stateManager)
+        {
+            _stateManager = stateManager;
+        }
+
         public ApiResponse ProcessRequest(CefRequest request)
         {
-            var response = Program.StateManager.GetCoreList();
+            var response = _stateManager.GetCoreList();
 
             return new ApiResponse(
                 JsonConvert.SerializeObject(response),
