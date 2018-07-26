@@ -8,7 +8,7 @@ namespace LibRetro.Native
         void FreeLibrary(IntPtr handle);
         IntPtr GetProcAddress(IntPtr dllHandle, string name);
         
-        int Sprintf(
+        void Sprintf(
             out string buffer,
             string format,
             params IntPtr[] args);

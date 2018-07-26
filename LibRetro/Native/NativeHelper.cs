@@ -26,9 +26,9 @@ namespace LibRetro.Native
             return PlatformHelper.GetProcAddress(dllHandle, name);
         }
 
-        public static int Sprintf(out string buffer, string format, params IntPtr[] args)
+        public static void Sprintf(out string buffer, string format, params IntPtr[] args)
         {
-            return PlatformHelper.Sprintf(out buffer, format, args);
+            PlatformHelper.Sprintf(out buffer, format, args);
         }
 
         public static int GetFormatArgumentCount(string format)
@@ -45,6 +45,7 @@ namespace LibRetro.Native
                         argumentsToPush += 1;
                         break;
                     case "d":
+                    case "x":
                         argumentsToPush += 1;
                         break;
                     case "f":

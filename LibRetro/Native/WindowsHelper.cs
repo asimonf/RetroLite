@@ -6,6 +6,8 @@ namespace LibRetro.Native
 {
     class WindowsHelper : IHelper
     {
+        private readonly StringBuilder _sprintfBuffer = new StringBuilder();
+
         void IHelper.FreeLibrary(IntPtr handle) {
             FreeLibrary(handle);
         }
@@ -18,28 +20,28 @@ namespace LibRetro.Native
             return LoadLibrary(fileName);
         }
 
-        int IHelper.Sprintf(out string buffer, string format, params IntPtr[] args)
+        void IHelper.Sprintf(out string buffer, string format, params IntPtr[] args)
         {
-            var tmpBuffer = new StringBuilder(
-                    _scprintf(
-                        format,
-                        args.Length >= 1 ? args[0] : IntPtr.Zero,
-                        args.Length >= 2 ? args[1] : IntPtr.Zero,
-                        args.Length >= 3 ? args[2] : IntPtr.Zero,
-                        args.Length >= 4 ? args[3] : IntPtr.Zero,
-                        args.Length >= 5 ? args[4] : IntPtr.Zero,
-                        args.Length >= 6 ? args[5] : IntPtr.Zero,
-                        args.Length >= 7 ? args[6] : IntPtr.Zero,
-                        args.Length >= 8 ? args[7] : IntPtr.Zero,
-                        args.Length >= 9 ? args[8] : IntPtr.Zero,
-                        args.Length >= 10 ? args[9] : IntPtr.Zero,
-                        args.Length >= 11 ? args[10] : IntPtr.Zero,
-                        args.Length >= 12 ? args[11] : IntPtr.Zero
-                    ) + 1
-                );
+            _sprintfBuffer.EnsureCapacity(
+                _scprintf(
+                    format,
+                    args.Length >= 1 ? args[0] : IntPtr.Zero,
+                    args.Length >= 2 ? args[1] : IntPtr.Zero,
+                    args.Length >= 3 ? args[2] : IntPtr.Zero,
+                    args.Length >= 4 ? args[3] : IntPtr.Zero,
+                    args.Length >= 5 ? args[4] : IntPtr.Zero,
+                    args.Length >= 6 ? args[5] : IntPtr.Zero,
+                    args.Length >= 7 ? args[6] : IntPtr.Zero,
+                    args.Length >= 8 ? args[7] : IntPtr.Zero,
+                    args.Length >= 9 ? args[8] : IntPtr.Zero,
+                    args.Length >= 10 ? args[9] : IntPtr.Zero,
+                    args.Length >= 11 ? args[10] : IntPtr.Zero,
+                    args.Length >= 12 ? args[11] : IntPtr.Zero
+                ) + 1
+            );
 
             sprintf(
-                tmpBuffer,
+                _sprintfBuffer,
                 format,
                 args.Length >= 1 ? args[0] : IntPtr.Zero,
                 args.Length >= 2 ? args[1] : IntPtr.Zero,
@@ -55,8 +57,7 @@ namespace LibRetro.Native
                 args.Length >= 12 ? args[11] : IntPtr.Zero
             );
 
-            buffer = tmpBuffer.ToString();
-            return tmpBuffer.Capacity;
+            buffer = _sprintfBuffer.ToString();
         }
 
         [DllImport("kernel32.dll", SetLastError=true, CharSet = CharSet.Auto)]

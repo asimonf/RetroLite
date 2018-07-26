@@ -6,6 +6,8 @@ namespace LibRetro.Native
 {
     class LinuxHelper : IHelper
     {
+        private readonly StringBuilder _sprintfBuffer = new StringBuilder();
+        
         public IntPtr LoadLibrary(string fileName) {
             return dlopen(fileName, RtldNow);
         }
@@ -25,18 +27,16 @@ namespace LibRetro.Native
             return res;
         }
         
-        public int Sprintf(out string buffer, string format, params IntPtr[] args)
+        public void Sprintf(out string buffer, string format, params IntPtr[] args)
         {
             if (args.Length > 12)
             {
                 throw new Exception("Too many formatting arguments");
             }
             
-            var tmpBuffer = new StringBuilder(5);
-
             var size = snprintf(
-                tmpBuffer,
-                tmpBuffer.Capacity,
+                _sprintfBuffer,
+                _sprintfBuffer.Capacity,
                 format,
                 args.Length >= 1 ? args[0] : IntPtr.Zero,
                 args.Length >= 2 ? args[1] : IntPtr.Zero,
@@ -52,13 +52,13 @@ namespace LibRetro.Native
                 args.Length >= 12 ? args[11] : IntPtr.Zero
             );
 
-            if (size >= tmpBuffer.Capacity)
+            if (size >= _sprintfBuffer.Capacity)
             {
-                tmpBuffer = new StringBuilder(size + 1);
+                _sprintfBuffer.EnsureCapacity(size + 1);
                 
                 snprintf(
-                    tmpBuffer,
-                    tmpBuffer.Capacity,
+                    _sprintfBuffer,
+                    _sprintfBuffer.Capacity,
                     format,
                     args.Length >= 1 ? args[0] : IntPtr.Zero,
                     args.Length >= 2 ? args[1] : IntPtr.Zero,
@@ -75,8 +75,7 @@ namespace LibRetro.Native
                 );
             }
 
-            buffer = tmpBuffer.ToString();
-            return tmpBuffer.Capacity;
+            buffer = _sprintfBuffer.ToString();
         }
 
         private const int RtldNow = 2;
