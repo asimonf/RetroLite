@@ -6,6 +6,14 @@
   height: 100%;
 }
 
+.background {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  background-color: black;
+  z-index: -1;
+}
+
 section#menu-container {
   width: 100%;
   height: 100%;

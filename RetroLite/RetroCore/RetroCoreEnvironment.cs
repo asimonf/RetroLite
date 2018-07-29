@@ -10,7 +10,7 @@ namespace RetroLite.RetroCore
         {
             if (cmd != RetroEnvironmentCommand.GetVariableUpdate)
             {
-                _logger.Debug("Core calling command: {0}", cmd);
+                Logger.Debug("Core calling command: {0}", cmd);
             }
 
             switch (cmd)
@@ -117,7 +117,7 @@ namespace RetroLite.RetroCore
 
         private bool _setMessage(RetroMessage* message)
         {
-            RetroCore._logger.Info("Message: " + message->Message);
+            RetroCore.Logger.Info("Message: " + message->Message);
 
             return true;
         }
@@ -131,7 +131,7 @@ namespace RetroLite.RetroCore
 
         private bool _setPerformanceLevel(uint* performanceLevel)
         {
-            RetroCore._logger.Debug("Setting performance level to: {0}", *performanceLevel);
+            RetroCore.Logger.Debug("Setting performance level to: {0}", *performanceLevel);
 
             return true;
         }
@@ -196,23 +196,19 @@ namespace RetroLite.RetroCore
 
         private bool _getVariable(RetroVariable* variablePtr)
         {
-            var variable = *variablePtr;
-            
-            _logger.Debug($"Core asking for variable {variable.Key}");
+            Logger.Debug($"Core asking for variable {(*variablePtr).Key}");
 
-            if (!_coreVariables.ContainsKey(variable.Key))
+            if (!_coreVariables.ContainsKey((*variablePtr).Key))
             {
-                RetroCore._logger.Warn("Variable not set: {0}", variable.Key);
+                RetroCore.Logger.Warn("Variable not set: {0}", (*variablePtr).Key);
                 return false;
             }
 
-            var coreVariable = _coreVariables[variable.Key];
+//            (*variablePtr).value = IntPtr.Zero;
+//
+//            return true;
 
-            variable.value = IntPtr.Zero;
-
-            *variablePtr = variable;
-
-            return true;
+            return false;
         }
 
         private bool _setVariables(RetroVariable* variables)
@@ -222,7 +218,7 @@ namespace RetroLite.RetroCore
                 var currVariable = variables[i];
                 var coreVariable = new CoreVariable(currVariable);
                 _coreVariables.Add(coreVariable.Name, coreVariable);
-                _logger.Debug<string, string>("{1} -> Adding variable: {0}", currVariable.Key, _coreName);
+                Logger.Debug<string, string>("{1} -> Adding variable: {0}", currVariable.Key, _coreName);
             }
 
             return true;

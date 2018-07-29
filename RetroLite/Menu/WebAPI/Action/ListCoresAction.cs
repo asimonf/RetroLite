@@ -15,14 +15,14 @@ namespace RetroLite.Menu.WebAPI.Action
 
         public string Method => "GET";
 
-        private StateManager _stateManager;
+        private readonly StateManager _stateManager;
 
         public ListCoresAction(StateManager stateManager)
         {
             _stateManager = stateManager;
         }
 
-        public ApiResponse ProcessRequest(CefRequest request)
+        public ApiResponse ProcessRequest(CefRequest request, IDictionary<string, string> parameters)
         {
             var response = _stateManager.GetCoreList();
 

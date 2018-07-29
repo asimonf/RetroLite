@@ -12,6 +12,6 @@ namespace RetroLite.Menu.WebAPI.Action
         string Path { get; }
         string Method { get; }
 
-        ApiResponse ProcessRequest(CefRequest request);
+        ApiResponse ProcessRequest(CefRequest request, IDictionary<string, string> parameters);
     }
 }

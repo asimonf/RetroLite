@@ -3,31 +3,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Redbus.Events;
 using RetroLite.DB;
+using RetroLite.Event;
 using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI.Action
 {
-    internal class ListGamesAction : IAction
+    internal class OpenMenuAction : IAction
     {
-        public string Path => "/games";
+        public string Path => "/event/open-menu";
 
         public string Method => "GET";
-        
-        private readonly StateManager _stateManager;
 
-        public ListGamesAction(StateManager stateManager)
+        private readonly EventProcessor _eventProcessor;
+
+        public OpenMenuAction(EventProcessor eventProcessor)
         {
-            _stateManager = stateManager;
+            _eventProcessor = eventProcessor;
         }
 
         public ApiResponse ProcessRequest(CefRequest request, IDictionary<string, string> parameters)
         {
-            var response = _stateManager.GetGameList();
+            using (var handle = _eventProcessor.EnqueueEventForMainThread(new OpenMenuEvent()))
+            {
+                handle.WaitOne();
+            }
             
             return new ApiResponse(
-                JsonConvert.SerializeObject(response),
+                null,
                 200
             );
         }

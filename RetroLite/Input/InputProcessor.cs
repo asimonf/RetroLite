@@ -5,7 +5,7 @@ using SDL2;
 
 namespace RetroLite.Input
 {
-    public class EventProcessor
+    public class InputProcessor
     {
         public const int MaxPorts = 4;
 
@@ -18,8 +18,13 @@ namespace RetroLite.Input
         public int X { get; private set; } = 0;
         public int Y { get; private set; } = 0;
 
-        public EventProcessor()
+        public InputProcessor()
         {
+            if (SDL.SDL_InitSubSystem(SDL.SDL_INIT_JOYSTICK) != 0)
+            {
+                throw new Exception("SDL Joystick Initialization error");
+            }
+            
             _gameControllersById = new Dictionary<int, GameController>();
             _ports = new GameController[MaxPorts];
             _ports[0] = new GameController();
@@ -40,7 +45,7 @@ namespace RetroLite.Input
             }
         }
 
-        ~EventProcessor()
+        ~InputProcessor()
         {
             foreach (var controller in _gameControllersById.Values)
             {
@@ -48,6 +53,8 @@ namespace RetroLite.Input
             }
 
             _gameControllersById.Clear();
+            
+            SDL.SDL_QuitSubSystem(SDL.SDL_INIT_JOYSTICK);
         }
 
         private void _assignGameControllerToPort(GameController controller)

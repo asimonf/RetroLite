@@ -5,8 +5,8 @@ using NLog.Config;
 using NLog.Targets;
 using Redbus;
 using RetroLite.DB;
+using RetroLite.Event;
 using RetroLite.Input;
-using RetroLite.Intro;
 using RetroLite.Menu;
 using RetroLite.Menu.WebAPI;
 using RetroLite.Menu.WebAPI.Action;
@@ -21,9 +21,7 @@ namespace RetroLite
 {
     internal static class Program
     {
-        private static NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
-
-        public static EventBus EventBus { get; } = new EventBus();
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         public static bool Running { get; set; } = true;
         
@@ -33,7 +31,7 @@ namespace RetroLite
             var cefMainArgs = new CefMainArgs(args);
             var cefApp = new MenuCefApp();
 
-            var res = CefRuntime.ExecuteProcess(cefMainArgs, cefApp, windowsSandboxInfo: IntPtr.Zero);
+            var res = CefRuntime.ExecuteProcess(cefMainArgs, cefApp, IntPtr.Zero);
             
             if (res >= 0)
             {
@@ -44,34 +42,23 @@ namespace RetroLite
             {
                 InitializeLogger();
                 
-                _logger.Info("Initializing SDL");
+                Logger.Info("Initializing SDL");
 
-                if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
+                if (SDL.SDL_Init(0) != 0)
                 {
-                    _logger.Error(new Exception("SDL Initialization error"));
+                    Logger.Error(new Exception("SDL Initialization error"));
                 }
                 
                 if (SDL_ttf.TTF_Init() != 0)
                 {
-                    _logger.Error(new Exception("TTF Initialization error"));
+                    Logger.Error(new Exception("TTF Initialization error"));
                 }
 
                 // Container
-                using (var container = new Container())
+                using (var container = SetupContainer(cefMainArgs, cefApp))
                 {
-                    SetupContainer(cefMainArgs, cefApp, container);
-    
                     var sceneManager = container.GetInstance<SceneManager>();
-    
-                    sceneManager.ChangeScene(
-                        new IntroScene(
-                            container.GetInstance<IRenderer>(), 
-                            sceneManager, 
-                            container.GetInstance<MenuScene>(),
-                            container.GetInstance<StateManager>()
-                        )
-                    );
-    
+
                     while (Running)
                     {
                         sceneManager.RunLoop();
@@ -82,7 +69,7 @@ namespace RetroLite
             }
             catch (Exception e)
             {
-                _logger.Error(e);
+                Logger.Error(e);
                 return 1;
             }
             finally
@@ -92,28 +79,37 @@ namespace RetroLite
             }
         }
 
-        private static void SetupContainer(CefMainArgs cefMainArgs, CefApp cefApp, Container container)
+        private static Container SetupContainer(CefMainArgs cefMainArgs, CefApp cefApp)
         {
+            var container = new Container();
+            
             // Register Cef related instances
             container.RegisterInstance(cefMainArgs);
             container.RegisterInstance(cefApp);
 
             // Register renderer (TODO: maybe make it configurable?)
-            container.Register<IRenderer, SdlRenderer>(Lifestyle.Singleton);
+            container.Register<IRenderer, SoftwareRenderer>(Lifestyle.Singleton);
 
             // Register main components
-            container.RegisterSingleton<EventProcessor>();
+            container.RegisterSingleton<InputProcessor>();
             container.RegisterSingleton<SceneManager>();
             container.RegisterSingleton<MenuRenderer>();
             container.RegisterSingleton<MenuBrowserClient>();
-            container.RegisterSingleton<RetroCoreCollection>();
-            container.RegisterSingleton<MenuScene>();
             container.RegisterSingleton<StateManager>();
+            container.RegisterSingleton<EventProcessor>();
+            container.RegisterSingleton<EventBus>();
+            container.RegisterSingleton<Config>();
+            container.RegisterSingleton<RetroCoreFactory>();
+            
+            // Register Scenes
+            container.Collection.Register<IScene>(Assembly.GetExecutingAssembly());
 
             // Register API components
             container.RegisterSingleton<ApiRouter>();
             container.Register<CefRequestHandler, ApiRequestHandler>(Lifestyle.Singleton);
             container.Collection.Register<IAction>(Assembly.GetExecutingAssembly());
+
+            return container;
         }
         
         private static unsafe void InitializeLogger()

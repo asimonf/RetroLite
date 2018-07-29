@@ -69,6 +69,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
@@ -78,42 +82,53 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Audio\CircularBuffer.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="DB\StateManager.cs" />
     <Compile Include="DB\Entity\Core.cs" />
     <Compile Include="DB\Entity\Game.cs" />
     <Compile Include="DB\Entity\System.cs" />
+    <Compile Include="Event\CloseMenuEvent.cs" />
+    <Compile Include="Event\EventProcessor.cs" />
+    <Compile Include="Event\InitializeEvent.cs" />
     <Compile Include="Event\LoadCoreEvent.cs" />
+    <Compile Include="Event\LoadGameEvent.cs" />
     <Compile Include="Event\OpenMenuEvent.cs" />
+    <Compile Include="Menu\WebAPI\Action\CloseMenuAction.cs" />
+    <Compile Include="Menu\WebAPI\Action\InitializeAction.cs" />
     <Compile Include="Menu\WebAPI\Action\ListCoresAction.cs" />
     <Compile Include="Menu\WebAPI\Action\ListGamesAction.cs" />
     <Compile Include="Menu\WebAPI\Action\IAction.cs" />
     <Compile Include="Menu\WebAPI\Action\ListSystemsAction.cs" />
+    <Compile Include="Menu\WebAPI\Action\LoadGameAction.cs" />
+    <Compile Include="Menu\WebAPI\Action\OpenMenuAction.cs" />
+    <Compile Include="Menu\WebAPI\Action\ScanGamesAction.cs" />
     <Compile Include="Menu\WebAPI\ApiRequestHandler.cs" />
     <Compile Include="Menu\WebAPI\ApiResponse.cs" />
     <Compile Include="Menu\WebAPI\ApiRouter.cs" />
     <Compile Include="Menu\WebAPI\ApiResourceHandler.cs" />
+    <Compile Include="Menu\WebAPI\RouteDefinition.cs" />
+    <Compile Include="RetroCore\CircularBuffer.cs" />
     <Compile Include="RetroCore\CoreVariable.cs" />
     <Compile Include="RetroCore\InputDescriptor.cs" />
     <Compile Include="RetroCore\RetroCore.cs" />
-    <Compile Include="RetroCore\RetroCoreCollection.cs" />
     <Compile Include="RetroCore\RetroCoreEnvironment.cs" />
-    <Compile Include="Input\EventProcessor.cs" />
+    <Compile Include="Input\InputProcessor.cs" />
     <Compile Include="Input\GameController.cs" />
     <Compile Include="Input\GameControllerStatus.cs" />
     <Compile Include="Input\VirtualKeys.cs" />
-    <Compile Include="Intro\IntroScene.cs" />
     <Compile Include="Menu\MenuBrowserClient.cs" />
     <Compile Include="Menu\MenuCefApp.cs" />
     <Compile Include="Menu\MenuRenderer.cs" />
-    <Compile Include="Menu\MenuScene.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RetroCore\RetroCoreFactory.cs" />
     <Compile Include="Scene\IScene.cs" />
+    <Compile Include="Scene\Menu.cs" />
+    <Compile Include="Scene\RetroCoreManager.cs" />
     <Compile Include="Scene\SceneManager.cs" />
     <Compile Include="Video\IRenderer.cs" />
-    <Compile Include="Video\SdlRenderer.cs" />
     <Compile Include="Video\SoftwareRenderer.cs" />
+    <Compile Include="Video\SurfaceRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

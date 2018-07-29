@@ -5,8 +5,6 @@ using System.Runtime.InteropServices;
 using LibRetro;
 using LibRetro.Types;
 using NLog;
-using RetroLite.Audio;
-using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Scene;
 using RetroLite.Video;
@@ -17,16 +15,16 @@ namespace RetroLite.RetroCore
 {
     public partial class RetroCore : IDisposable
     {
-        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         private readonly string _coreName;
         private readonly Dictionary<Delegate, GCHandle> _delegateDictionary;
         private readonly string _systemDirectory;
         
-        private readonly SceneManager _manager;
-        private readonly EventProcessor _eventProcessor;
+        private readonly InputProcessor _inputProcessor;
         private readonly IRenderer _renderer;
         private readonly Core _core;
+        private readonly Config _config;
 
         private readonly List<InputDescriptor> _inputDescriptors;
         private readonly Dictionary<string, CoreVariable> _coreVariables;
@@ -52,8 +50,10 @@ namespace RetroLite.RetroCore
         private readonly byte[] _temporaryAudioBuffer;
         private readonly float[] _temporaryConversionBuffer;
         private readonly float[] _temporaryResampleBuffer;
+        private readonly float[] _temporaryOutputBuffer;
         private IntPtr _resamplerState;
         private readonly CircularBuffer _audioBuffer;
+        private bool _resampleNeeded;
 
         #endregion
 
@@ -64,7 +64,7 @@ namespace RetroLite.RetroCore
 
         #endregion
 
-        public RetroCore(string dllPath, SceneManager manager, EventProcessor eventProcessor, IRenderer renderer)
+        public RetroCore(string dllPath, Config config, InputProcessor inputProcessor, IRenderer renderer)
         {
             _systemDirectory = Path.Combine(
                 Environment.CurrentDirectory,
@@ -102,18 +102,14 @@ namespace RetroLite.RetroCore
             _temporaryAudioBuffer = new byte[8192];
             _temporaryConversionBuffer = new float[8192];
             _temporaryResampleBuffer = new float[8192];
+            _temporaryOutputBuffer = new float[8192];
             _audioBuffer = new CircularBuffer(8192 * 4);
 
-            _manager = manager;
-            _eventProcessor = eventProcessor;
+            _config = config;
+            _inputProcessor = inputProcessor;
             _renderer = renderer;
             
             _core.RetroInit();
-        }
-
-        public void Start()
-        {
-            
         }
 
         public void Reset()
@@ -125,7 +121,7 @@ namespace RetroLite.RetroCore
 
         public void LoadGame(string path)
         {
-            _logger.Debug("Loading game: {0}", path);
+            Logger.Debug("Loading game: {0}", path);
             if (GameLoaded)
             {
                 _core.RetroUnloadGame();
@@ -163,7 +159,7 @@ namespace RetroLite.RetroCore
 
             GameLoaded = true;
             _core.RetroGetSystemAvInfo(out _currentSystemAvInfo);
-            _manager.TargetFps = _currentSystemAvInfo.Timing.Fps;
+            _config.TargetFps = _currentSystemAvInfo.Timing.Fps;
             _videoContextUpdated = true;
             _updateAudioContext();
         }
@@ -188,7 +184,7 @@ namespace RetroLite.RetroCore
 
             if (IntPtr.Zero == data || IntPtr.Zero == _framebuffer)
             {
-                _logger.Warn($"Invalid framebuffer in '{this._coreName}'");
+                Logger.Warn($"Invalid framebuffer in '{this._coreName}'");
                 return;
             }
 
@@ -241,7 +237,7 @@ namespace RetroLite.RetroCore
 
         private short _inputState(uint port, RetroDevice device, uint index, uint id)
         {
-            if (_eventProcessor[(int) port] == null)
+            if (_inputProcessor[(int) port] == null)
             {
                 return 0;
             }
@@ -252,37 +248,37 @@ namespace RetroLite.RetroCore
                     switch ((RetroDeviceIdJoypad) id)
                     {
                         case RetroDeviceIdJoypad.A:
-                            return _eventProcessor[(int) port].B == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].B == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.B:
-                            return _eventProcessor[(int) port].A == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].A == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.DOWN:
-                            return _eventProcessor[(int) port].DpadDown == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].DpadDown == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.L:
-                            return _eventProcessor[(int) port].LeftShoulder == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].LeftShoulder == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.L2:
-                            return _eventProcessor[(int) port].LeftTrigger;
+                            return _inputProcessor[(int) port].LeftTrigger;
                         case RetroDeviceIdJoypad.L3:
-                            return _eventProcessor[(int) port].LeftStick == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].LeftStick == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.LEFT:
-                            return _eventProcessor[(int) port].DpadLeft == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].DpadLeft == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.R:
-                            return _eventProcessor[(int) port].RightShoulder == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].RightShoulder == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.R2:
-                            return _eventProcessor[(int) port].RightTrigger;
+                            return _inputProcessor[(int) port].RightTrigger;
                         case RetroDeviceIdJoypad.R3:
-                            return _eventProcessor[(int) port].RightStick == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].RightStick == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.RIGHT:
-                            return _eventProcessor[(int) port].DpadRight == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].DpadRight == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.SELECT:
-                            return _eventProcessor[(int) port].Back == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].Back == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.START:
-                            return _eventProcessor[(int) port].Start == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].Start == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.UP:
-                            return _eventProcessor[(int) port].DpadUp == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].DpadUp == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.X:
-                            return _eventProcessor[(int) port].Y == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].Y == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                         case RetroDeviceIdJoypad.Y:
-                            return _eventProcessor[(int) port].X == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
+                            return _inputProcessor[(int) port].X == GameControllerButtonState.Down ? short.MaxValue : (short) 0;
                     }
                     break;
             }
@@ -297,16 +293,16 @@ namespace RetroLite.RetroCore
             switch (level)
             {
                 case RetroLogLevel.Debug:
-                    _logger.Debug(message, formattedString, _coreName);
+                    Logger.Debug(message, formattedString, _coreName);
                     break;
                 case RetroLogLevel.Info:
-                    _logger.Info(message, formattedString, _coreName);
+                    Logger.Info(message, formattedString, _coreName);
                     break;
                 case RetroLogLevel.Warn:
-                    _logger.Warn(message, formattedString, _coreName);
+                    Logger.Warn(message, formattedString, _coreName);
                     break;
                 case RetroLogLevel.Error:
-                    _logger.Error(message, formattedString, _coreName);
+                    Logger.Error(message, formattedString, _coreName);
                     break;
             }
         }
@@ -391,49 +387,26 @@ namespace RetroLite.RetroCore
         #region IScene Methods
         public void Dispose()
         {
+            _core.RetroDeinit();
             if (_resamplerState != IntPtr.Zero)
             {
-                _logger.Debug("Freeing resampler state");
+                Logger.Debug("Freeing resampler state");
                 SampleRate.src_delete(_resamplerState);
             }
 
-            _logger.Debug("Freeing libretro core");
+            Logger.Debug("Freeing libretro core");
             _core.Dispose();
 
-            _logger.Debug("Freeing callback handles");
+            Logger.Debug("Freeing callback handles");
             foreach (var handle in _delegateDictionary.Values)
             {
                 handle.Free();
             }
         }
 
-        public void Stop()
-        {
-        }
-
-        public void Pause()
-        {
-        }
-
-        public void Resume()
-        {
-            _videoContextUpdated = true;
-        }
-
         public void HandleEvents()
         {
-            for (var port = 0; port < EventProcessor.MaxPorts; port++)
-            {
-                // Ignore if there's no device connected
-                if (_eventProcessor[port] == null) continue;
-                
-                // Switch to menu if guide is pressed
-                if (_eventProcessor[port].Guide == GameControllerButtonState.Up)
-                {
-                    Program.EventBus.Publish(new OpenMenuEvent());
-                    break;                    
-                }
-            }
+            
         }
 
         public void Update()
@@ -459,10 +432,12 @@ namespace RetroLite.RetroCore
             }
         }
 
-        public void GetAudioData(IntPtr buffer, int frames)
+        public float[] GetAudioData(int frames)
         {
-            // One frame is 2 samples of 2 bytes each (short) 
-            _audioBuffer.CopyTo(buffer, frames  * 2 * 2);
+            // One frame is 2 samples 
+            _audioBuffer.CopyTo(_temporaryOutputBuffer, frames * 2);
+
+            return _temporaryOutputBuffer;
         }
 
         #endregion
@@ -475,16 +450,24 @@ namespace RetroLite.RetroCore
                 SampleRate.src_delete(_resamplerState);
             }
 
-            _resamplerState = SampleRate.src_new(SampleRate.Quality.SRC_SINC_BEST_QUALITY, 2, out var error);
-
-            if (error > 0)
+            if (_config.SampleRate != (int) _currentSystemAvInfo.Timing.SampleRate)
             {
-                _logger.Error("Error initializing resampler: '{0}'", SampleRate.src_strerror(error));
+                _resampleNeeded = true;
+                _audioResampleRatio = _config.SampleRate / _currentSystemAvInfo.Timing.SampleRate;
+                _resamplerState = SampleRate.src_new(SampleRate.Quality.SRC_SINC_BEST_QUALITY, 2, out var error);
+    
+                if (error > 0)
+                {
+                    Logger.Error("Error initializing resampler: '{0}'", SampleRate.src_strerror(error));
+                }
+    
+                Logger.Debug("Audio Resample Ratio: {0}", _audioResampleRatio);
             }
-
-            // This should be fixed with the target framerate
-            _audioResampleRatio = _manager.AudioFormat.mix.rate / _currentSystemAvInfo.Timing.SampleRate;
-            _logger.Debug("Audio Resample Ratio: {0}", _audioResampleRatio);
+            else
+            {
+                _resampleNeeded = false;
+                Logger.Debug("Resampling not needed");
+            }
         }
 
         private void _resampleAudioData()
@@ -495,37 +478,44 @@ namespace RetroLite.RetroCore
                 fixed (byte* dataPtr = &_temporaryAudioBuffer[0])
                 {
                     var shortDataPtr = (short*) dataPtr;
-                    fixed (float* conversionPtr = &_temporaryConversionBuffer[0], resamplePtr =
-                        &_temporaryResampleBuffer[0])
+                    fixed (float* conversionPtr = &_temporaryConversionBuffer[0])
                     {
-                        SampleRate.src_short_to_float_array(shortDataPtr, conversionPtr, _temporaryAudioBufferPosition);
+                        SampleRate.src_short_to_float_array(shortDataPtr, conversionPtr,
+                            _temporaryAudioBufferPosition);
 
-                        var convert = new SampleRate.SRC_DATA()
+                        if (_resampleNeeded)
                         {
-                            data_in = conversionPtr,
-                            data_out = resamplePtr,
-                            input_frames = frames,
-                            output_frames = frames * 2,
-                            src_ratio = _audioResampleRatio
-                        };
-                        var res = SampleRate.src_process(_resamplerState, ref convert);
+                            fixed (float* resamplePtr =
+                                &_temporaryResampleBuffer[0])
+                            {
+                                var convert = new SampleRate.SRC_DATA()
+                                {
+                                    data_in = conversionPtr,
+                                    data_out = resamplePtr,
+                                    input_frames = frames,
+                                    output_frames = frames * 2,
+                                    src_ratio = _audioResampleRatio
+                                };
+                                var res = SampleRate.src_process(_resamplerState, ref convert);
 
-                        if (res != 0)
-                        {
-                            _logger.Error(SampleRate.src_strerror(res));
+                                if (res != 0)
+                                {
+                                    Logger.Error(SampleRate.src_strerror(res));
+                                }
+                                else
+                                {
+                                    _audioBuffer.CopyFrom(_temporaryResampleBuffer, convert.output_frames_gen * 2);
+                                }   
+                            }
                         }
                         else
                         {
-                            SampleRate.src_float_to_short_array(resamplePtr, shortDataPtr,
-                                convert.output_frames_gen * 2);
-                            var size = convert.output_frames_gen * 4;
-                            _audioBuffer.CopyFrom(_temporaryAudioBuffer, size);
+                            _audioBuffer.CopyFrom(_temporaryConversionBuffer, frames * 2);
                         }
                     }
                 }
-
-                _temporaryAudioBufferPosition = 0;
             }
+            _temporaryAudioBufferPosition = 0;
         }
 
         private void _recreateFramebuffer()

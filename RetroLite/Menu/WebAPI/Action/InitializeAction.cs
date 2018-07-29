@@ -1,33 +1,28 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using RetroLite.DB;
 using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI.Action
 {
-    internal class ListSystemsAction : IAction
+    public class InitializeAction : IAction
     {
-        public string Path => "/systems";
+        public string Path => "/initialize";
 
         public string Method => "GET";
         
         private readonly StateManager _stateManager;
 
-        public ListSystemsAction(StateManager stateManager)
+        public InitializeAction(StateManager stateManager)
         {
             _stateManager = stateManager;
         }
-
+        
         public ApiResponse ProcessRequest(CefRequest request, IDictionary<string, string> parameters)
         {
-            var response = _stateManager.GetSystemList();
-
+            _stateManager.Initialize();
+            
             return new ApiResponse(
-                JsonConvert.SerializeObject(response),
+                null,
                 200
             );
         }

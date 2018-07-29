@@ -13,7 +13,7 @@ namespace RetroLite.Menu
             _renderer = menuRenderer;
             _requestHandler = requestHandler;
         }
-
+        
         protected override CefRenderHandler GetRenderHandler()
         {
             return _renderer;

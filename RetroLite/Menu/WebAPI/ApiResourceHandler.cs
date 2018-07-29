@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI
@@ -36,11 +37,16 @@ namespace RetroLite.Menu.WebAPI
                     try
                     {
                         _apiResponse = _apiRouter.ProcessRequest(request);
-                        _responseBytes = Encoding.UTF8.GetBytes(_apiResponse.Data);
+
+                        if (_apiResponse.Data != null)
+                        {
+                            _logger.Debug(_apiResponse.Data);
+                            _responseBytes = Encoding.UTF8.GetBytes(_apiResponse.Data);
+                        }
                     }
                     catch (Exception exception)
                     {
-                        _logger.Error(exception, "Error processing a request");
+                        _logger.Error(exception, exception.Message);
                         _apiResponse = new ApiResponse(exception.Message, 500);
                     }
                     finally
@@ -55,7 +61,7 @@ namespace RetroLite.Menu.WebAPI
 
         protected override void GetResponseHeaders(CefResponse response, out long responseLength, out string redirectUrl)
         {
-            responseLength = _responseBytes.LongLength;
+            responseLength = _responseBytes?.LongLength ?? 0;
             redirectUrl = null;
 
             try

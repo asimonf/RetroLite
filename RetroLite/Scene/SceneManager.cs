@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Video;
 using Xt;
@@ -12,133 +14,79 @@ namespace RetroLite.Scene
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private readonly Stack<IScene> _scenes;
+        private readonly IScene[] _scenes;
 
         private readonly IRenderer _renderer;
+        private readonly InputProcessor _inputProcessor;
         private readonly EventProcessor _eventProcessor;
+        private readonly Config _config;
         
         private readonly XtAudio _xtAudio;
         private readonly XtDevice _xtDevice;
         private readonly XtStream _xtStream;
+        private readonly float[] _tmpAudioBuffer;
 
-        public XtFormat AudioFormat { get; }
-        public IScene CurrentScene => _scenes.Count > 0 ? _scenes.Peek() : null;
+        private readonly Stopwatch _nopTimer;
 
-        private Stopwatch _nopTimer;
-        
-        public double TargetFps { get; set; } = 60;
-
-        public SceneManager(IRenderer renderer, EventProcessor eventProcessor)
+        public SceneManager(
+            IRenderer renderer, 
+            InputProcessor inputProcessor, 
+            EventProcessor eventProcessor, 
+            IEnumerable<IScene> scenes,
+            Config config
+        )
         {
             _renderer = renderer;
+            _inputProcessor = inputProcessor;
             _eventProcessor = eventProcessor;
-            
-            _scenes = new Stack<IScene>();
-            
-            _xtAudio = new XtAudio(null, IntPtr.Zero, _traceCallback, _fatalCallback);
-            var xtService = XtAudio.GetServiceBySetup(XtSetup.SystemAudio);
-            AudioFormat = new XtFormat(new XtMix(48000, XtSample.Int16), 0, 0, 2, 0);
-            _xtDevice = xtService.OpenDefaultDevice(true);
-            _xtStream = _xtDevice.OpenStream(AudioFormat, interleaved: true, raw: true, bufferSize: 16, RenderAudioCallback, XRunCallback, null);
-            _xtStream.Start();
+
+            _scenes = scenes.ToArray();
+            Array.Sort(_scenes);
+
+            _config = config;
             
             _nopTimer = new Stopwatch();
             _nopTimer.Start();
+            
+            // Audio Related Stuff
+            _tmpAudioBuffer = new float[8192];
+            _xtAudio = new XtAudio(null, IntPtr.Zero, _traceCallback, _fatalCallback);
+            var xtService = XtAudio.GetServiceBySetup(XtSetup.SystemAudio);
+            var audioFormat = new XtFormat(new XtMix(_config.SampleRate, XtSample.Float32), 0, 0, 2, 0);
+            _xtDevice = xtService.OpenDefaultDevice(true);
+            _xtStream = _xtDevice.OpenStream(audioFormat, true, true, 16, RenderAudioCallback, XRunCallback, null);
+            _xtStream.Start();
+            
         }
 
         public void Dispose()
         {
-            while (_scenes.Count > 0)
-            {
-                var scene = _scenes.Pop();
-                scene.Pause();
-                scene.Stop();
-            }
             _xtStream.Stop();
             _xtStream.Dispose();
             _xtDevice.Dispose();
             _xtAudio.Dispose();
-            
-            Console.WriteLine("Disposed");
         }
         
-        public RetroCore.RetroCore CreateRetroCore(string dll, string system)
-        {
-            Logger.Debug($"Loading core {dll}");
-            var name = Path.GetFileNameWithoutExtension(dll);
-
-            Debug.Assert(name != null, nameof(name) + " != null");
-
-            try
-            {
-                var core = new RetroCore.RetroCore(dll, this, _eventProcessor, _renderer);
-                core.Start();
-
-                Logger.Debug($"Core '{name}' for system '{system}' loaded.");
-
-                return core;
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Error loading core...");
-
-                return null;
-            }
-        }
-
-        public void ChangeScene(IScene scene)
-        {
-            _eventProcessor.ResetControllers();    
-            if (_scenes.Count > 0)
-            {
-                var poppedScene = _scenes.Pop();
-                poppedScene.Pause();
-                poppedScene.Stop();
-            }
-
-            _scenes.Push(scene);
-            scene.Start();
-            scene.Resume();
-        }
-
-        public void PushScene(IScene scene)
-        {
-            _eventProcessor.ResetControllers();
-            CurrentScene?.Pause();
-
-            _scenes.Push(scene);
-            scene.Start();
-            scene.Resume();
-        }
-
-        public void PopScene()
-        {
-            _eventProcessor.ResetControllers();
-            if (_scenes.Count > 0)
-            {
-                _scenes.Pop().Stop();
-            }
-
-            CurrentScene?.Resume();
-        }
-
         private void HandleEvents()
         {
+            _inputProcessor.HandleEvents();
             _eventProcessor.HandleEvents();
-            
-            CurrentScene?.HandleEvents();
+            foreach (var scene in _scenes)
+                scene.HandleEvents();
         }
 
         private void Update()
         {
-            CurrentScene?.Update();
+            foreach (var scene in _scenes)
+                scene.Update();
         }
 
         private void Draw()
         {
             _renderer.SetRenderDrawColor(0, 0, 0, 255);
             _renderer.RenderClear();
-            CurrentScene?.Draw();
+            foreach (var scene in _scenes)
+                scene.Draw();
             _renderer.RenderPresent();
         }
 
@@ -150,7 +98,7 @@ namespace RetroLite.Scene
             Draw();
             var frameTicks = Stopwatch.GetTimestamp() - frameStart;
             var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
-            var targetFrametime = (1000.0 / TargetFps);
+            var targetFrametime = (1000.0 / _config.TargetFps);
             
             if (!(targetFrametime > elapsedTime)) return;
             
@@ -164,7 +112,46 @@ namespace RetroLite.Scene
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,
             ulong position, bool timeValid, ulong error, object user)
         {
-            CurrentScene?.GetAudioData(((IntPtr)output), frames);
+            var sampleCount = frames * 2; // 2 channels per frame, interleaved
+            
+            if (_scenes.Length == 0)
+            {
+                for (var i = 0; i < sampleCount; i++) unsafe
+                {
+                    ((float*) ((IntPtr)output).ToPointer())[i] = 0;
+                }
+
+                return;
+            }
+
+            var firstSceneFrames = _scenes[0].GetAudioData(frames);
+
+            if (firstSceneFrames == null)
+            {
+                Array.Clear(_tmpAudioBuffer, 0, sampleCount);
+            }
+            else
+            {
+                Array.Copy(firstSceneFrames, _tmpAudioBuffer, sampleCount);
+            }
+
+            for (var i = 1; i < _scenes.Length; i++)
+            {
+                var sceneFrames = _scenes[i].GetAudioData(frames);
+
+                if (null == sceneFrames) continue;
+
+                // Actual mixing. TODO: Optimize using SIMD intrinsics
+                for (var j = 0; j < sampleCount; j++)
+                {
+                    var a = sceneFrames[j];
+                    var b = _tmpAudioBuffer[j];
+
+                    _tmpAudioBuffer[j] = a + b - a * b;
+                }
+            }
+            
+            Marshal.Copy(_tmpAudioBuffer, 0, (IntPtr)output, sampleCount);
         }
         
         private void XRunCallback(int index, object user)

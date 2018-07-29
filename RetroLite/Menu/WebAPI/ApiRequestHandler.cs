@@ -16,7 +16,7 @@ namespace RetroLite.Menu.WebAPI
         {
             var url = new Uri(request.Url);
 
-            if (url.Host != "retrolite.internal") return null;
+            if (url.Host != "api.retrolite.internal") return null;
 
             return new ApiResourceHandler(_apiRouter);
         }

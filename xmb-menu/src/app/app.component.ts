@@ -25,19 +25,9 @@ import {
   ]
 })
 export class AppComponent {
-  title = 'app';
-
   menu: Menu;
 
   constructor() {
     this.menu = new Menu();
-  }
-
-  @HostListener('document:openmenu') openMenu() {
-    this.menu.state = 'active';
-  }
-
-  @HostListener('document:closemenu') closeMenu() {
-    this.menu.state = 'inactive';
   }
 }

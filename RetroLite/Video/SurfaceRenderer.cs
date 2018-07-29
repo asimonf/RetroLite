@@ -3,50 +3,44 @@ using SDL2;
 
 namespace RetroLite.Video
 {
-    public class SdlRenderer : IRenderer
+    public class SurfaceRenderer : IRenderer
     {
-        private readonly IntPtr _sdlWindow;
+        private readonly IntPtr _sdlSurface;
         private readonly IntPtr _sdlRenderer;
 
         public int Height { get; }
         public int Width { get; }
 
-        public SdlRenderer()
+        public SurfaceRenderer(int width, int height)
         {
-            Width = 800;
-            Height = 600;
-            
-            _sdlWindow = SDL.SDL_CreateWindow(
-                "RetroLite", 
-                SDL.SDL_WINDOWPOS_UNDEFINED, 
-                SDL.SDL_WINDOWPOS_UNDEFINED, 
-                Width, 
-                Height, 
-                SDL.SDL_WindowFlags.SDL_WINDOW_VULKAN
-            );
-
-            if (_sdlWindow == null)
+            if (SDL.SDL_InitSubSystem(SDL.SDL_INIT_VIDEO) != 0)
             {
-                throw new Exception("SDL Window Initialization Error");
+                throw new Exception("SDL Video Initialization error");
+            }
+            
+            Width = width;
+            Height = height;
+            
+            _sdlSurface = SDL.SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
+
+            if (_sdlSurface == null)
+            {
+                throw new Exception("SDL Software Surface Initialization Error");
             }
 
-            _sdlRenderer = SDL.SDL_CreateRenderer(_sdlWindow, -1,
-                SDL.SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
-//                SDL.SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC | 
-                SDL.SDL_RendererFlags.SDL_RENDERER_TARGETTEXTURE);
+            _sdlRenderer = SDL.SDL_CreateSoftwareRenderer(_sdlSurface);
 
             if (_sdlRenderer == null)
             {
                 throw new Exception("SDL Renderer Initialization Error");
             }
-
-            SetRenderDrawBlendMode(SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
 
         public void Dispose()
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
-            SDL.SDL_DestroyWindow(_sdlWindow);
+            SDL.SDL_FreeSurface(_sdlSurface);
+            SDL.SDL_QuitSubSystem(SDL.SDL_INIT_VIDEO);
         }
 
         public IntPtr LoadTextureFromFile(string path)
@@ -119,6 +113,10 @@ namespace RetroLite.Video
             SDL.SDL_RenderPresent(_sdlRenderer);
         }
 
+        public void Screenshot()
+        {
+        }
+        
         public bool SetRenderDrawBlendMode(SDL.SDL_BlendMode mode)
         {
             return SDL.SDL_SetRenderDrawBlendMode(_sdlRenderer, mode) == 0;
@@ -129,14 +127,9 @@ namespace RetroLite.Video
             return SDL.SDL_SetTextureBlendMode(texture, mode) == 0;
         }
 
-        public void Screenshot()
-        {
-            
-        }
-
         public void SetTitleText(string title)
         {
-            SDL.SDL_SetWindowTitle(_sdlWindow, title);
+            
         }
     }
 }

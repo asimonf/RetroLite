@@ -2,17 +2,14 @@
 
 namespace RetroLite.Scene
 {
-    public interface IScene
+    public interface IScene: IComparable<IScene>
     {
-        void Start();
-        void Resume();
-        void Pause();
-        void Stop();
-
+        int Order { get; }
+        
         void HandleEvents();
         void Update();
         void Draw();
 
-        void GetAudioData(IntPtr buffer, int frames);
+        float[] GetAudioData(int frames);
     }
 }

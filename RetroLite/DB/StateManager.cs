@@ -9,6 +9,7 @@ using NLog;
 using RetroLite.DB.Entity;
 using RetroLite.Event;
 using RetroLite.Input;
+using RetroLite.RetroCore;
 using RetroLite.Scene;
 using RetroLite.Video;
 using Logger = NLog.Logger;
@@ -21,13 +22,13 @@ namespace RetroLite.DB
 
         private readonly LiteRepository _db;
         private readonly Dictionary<string, Dictionary<string, RetroCore.RetroCore>> _retroCoresBySystem;
-        private readonly SceneManager _sceneManager;
+        private readonly RetroCoreFactory _coreFactory;
 
-        public StateManager(SceneManager manager)
+        public StateManager(RetroCoreFactory coreFactory)
         {
             _db = new LiteRepository(Path.Combine(Environment.CurrentDirectory, "retrolite.db"));
             _retroCoresBySystem = new Dictionary<string, Dictionary<string, RetroCore.RetroCore>>();
-            _sceneManager = manager;
+            _coreFactory = coreFactory;
         }
 
         public void Dispose()
@@ -35,60 +36,9 @@ namespace RetroLite.DB
             _db.Dispose();
         }
         
-        private void _initialize()
+        public void ScanForGames()
         {
-            var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "cores"));
-                
-            foreach (var systemPath in systems)
-            {
-                var system = Path.GetFileNameWithoutExtension(systemPath);
-
-                if (null == system) continue;
-
-                var systemCoresList = new Dictionary<string, RetroCore.RetroCore>();
-                
-                var cores = Directory.GetFiles(systemPath, "*.dll");
-
-                var extensions = new List<string>();
-                    
-                foreach (var core in cores)
-                {
-                    var retroCore = _sceneManager.CreateRetroCore(core, system);
-                    retroCore.LowLevelCore.RetroGetSystemInfo(out var systemInfo);
-
-                    var name = Path.GetFileNameWithoutExtension(core);
-
-                    var coreExtensions = systemInfo.GetExtensions();
-                    
-                    _db.Upsert(new Core()
-                    {
-                        Name = name,
-                        LibraryName = systemInfo.GetLibraryName(),
-                        LibraryVersion = systemInfo.GetLibraryVersion(),
-                        ValidExtensions = coreExtensions,
-                        Path = core,
-                        System = system,
-                    });
-                    
-                    extensions.AddRange(coreExtensions);
-                    
-                    systemCoresList.Add(name, retroCore);
-                }
-                
-                _db.Upsert(new Entity.System()
-                {
-                    Name = system,
-                    ValidExtensions = extensions.ToArray(),
-                });
-                _retroCoresBySystem.Add(system, systemCoresList);
-            }
-        }
-
-        
-
-        private void _scanGames(string basePath)
-        {
-            var systems = Directory.GetDirectories(basePath);
+            var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "roms"));
 
             var systemCollection = _db.Database.GetCollection<Entity.System>();
 
@@ -127,23 +77,56 @@ namespace RetroLite.DB
             });
         }
 
-        /// <summary>
-        /// Scans a path for games, updating the database with anything found on the route
-        /// </summary>
-        /// <param name="basePath"></param>
-        /// <returns>The task object</returns>
-        public Task ScanForGames(string basePath)
+        public void Initialize()
         {
-            return Task.Factory.StartNew(() =>
+            var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "cores"));
+                
+            foreach (var systemPath in systems)
             {
-                _db.Delete<Game>(x => true);
-                _scanGames(basePath);
-            });
-        }
+                var system = Path.GetFileNameWithoutExtension(systemPath);
 
-        public Task Initialize()
-        {
-            return Task.Factory.StartNew(_initialize);
+                if (null == system) continue;
+
+                var systemCoresList = new Dictionary<string, RetroCore.RetroCore>();
+                
+                var cores = Directory.GetFiles(systemPath, "*.dll");
+
+                var extensions = new List<string>();
+                    
+                foreach (var core in cores)
+                {
+                    var retroCore = _coreFactory.CreateRetroCore(core, system);
+                    
+                    if (null == retroCore) continue;
+                    
+                    retroCore.LowLevelCore.RetroGetSystemInfo(out var systemInfo);
+
+                    var name = Path.GetFileNameWithoutExtension(core);
+
+                    var coreExtensions = systemInfo.GetExtensions();
+                    
+                    _db.Upsert(new Core()
+                    {
+                        Name = name,
+                        LibraryName = systemInfo.GetLibraryName(),
+                        LibraryVersion = systemInfo.GetLibraryVersion(),
+                        ValidExtensions = coreExtensions,
+                        Path = core,
+                        System = system,
+                    });
+                    
+                    extensions.AddRange(coreExtensions);
+                    
+                    systemCoresList.Add(name, retroCore);
+                }
+                
+                _db.Upsert(new Entity.System()
+                {
+                    Name = system,
+                    ValidExtensions = extensions.ToArray(),
+                });
+                _retroCoresBySystem.Add(system, systemCoresList);
+            }
         }
 
         public RetroCore.RetroCore GetDefaultRetroCoreForSystem(string system)
@@ -169,6 +152,13 @@ namespace RetroLite.DB
         {
             return _db.Query<Entity.System>()
                 .ToList();
+        }
+
+        public Game GetGameById(Guid id)
+        {
+            return _db.Query<Game>()
+                .Where(x => x.Id == id)
+                .SingleOrDefault();
         }
     }
 }

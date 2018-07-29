@@ -12,5 +12,10 @@ namespace RetroLite.Menu
             commandLine.AppendSwitch("off-screen-rendering-enabled");
             commandLine.AppendSwitch("off-screen-frame-rate", "60");
         }
+
+        protected override CefRenderProcessHandler GetRenderProcessHandler()
+        {
+            return base.GetRenderProcessHandler();
+        }
     }
 }

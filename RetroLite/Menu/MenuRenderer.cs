@@ -10,8 +10,6 @@ namespace RetroLite.Menu
         private readonly IntPtr _texture;
         private readonly IRenderer _renderer;
 
-        private bool _newFrameReady = false;
-
         public MenuRenderer(IRenderer renderer)
         {
             _renderer = renderer;
@@ -43,8 +41,6 @@ namespace RetroLite.Menu
             _renderer.LockTexture(_texture, out var pixels, out var pitch);
             Buffer.MemoryCopy(buffer.ToPointer(), pixels.ToPointer(), length, length);
             _renderer.UnlockTexture(_texture);
-
-            _newFrameReady = true;
         }
 
         protected override CefAccessibilityHandler GetAccessibilityHandler()
@@ -75,10 +71,7 @@ namespace RetroLite.Menu
         
         public void Draw()
         {
-            if (!_newFrameReady) return;
-            
             _renderer.RenderCopy(_texture);
-            _newFrameReady = false;
         }
 
         public void Dispose()
