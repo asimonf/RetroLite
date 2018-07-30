@@ -14,7 +14,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     internal class CloseMenuAction : IAction
     {
-        public string Path => "/event/close-menu";
+        public string Path => "^/event/close-menu$";
 
         public string Method => "GET";
 

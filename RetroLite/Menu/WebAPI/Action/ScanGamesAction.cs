@@ -6,7 +6,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     public class ScanGamesAction : IAction
     {
-        public string Path => "/games/scan";
+        public string Path => "^/games/scan$|";
 
         public string Method => "GET";
         

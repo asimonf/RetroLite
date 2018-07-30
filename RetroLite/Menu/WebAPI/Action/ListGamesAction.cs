@@ -11,7 +11,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     internal class ListGamesAction : IAction
     {
-        public string Path => "/games";
+        public string Path => "^/games$";
 
         public string Method => "GET";
         

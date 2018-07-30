@@ -42,7 +42,7 @@ export class InitializeComponent implements OnInit {
   ngOnInit() {
     Promise.all([
       this.retroApi.initialize().then(() => {
-        this.retroApi.loadGames().then((data) => {
+        this.retroApi.refreshGameList().then((data) => {
           this.router.navigate(['/menu']);
         });
       }),

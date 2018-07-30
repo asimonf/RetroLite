@@ -11,7 +11,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     internal class ListSystemsAction : IAction
     {
-        public string Path => "/systems";
+        public string Path => "^/systems$";
 
         public string Method => "GET";
         

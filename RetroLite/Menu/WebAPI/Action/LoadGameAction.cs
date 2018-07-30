@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     internal class LoadGameAction : IAction
     {
-        public string Path => "/games/:id/load";
+        public string Path => "^/games/:id/load$";
 
         public string Method => "POST";
 

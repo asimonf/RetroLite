@@ -6,7 +6,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     public class InitializeAction : IAction
     {
-        public string Path => "/initialize";
+        public string Path => "^/initialize$";
 
         public string Method => "GET";
         

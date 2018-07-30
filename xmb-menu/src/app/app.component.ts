@@ -7,6 +7,7 @@ import {
   animate,
   transition
 } from '@angular/animations';
+import {RetroLiteApiService} from './retro-lite-api.service';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +28,7 @@ import {
 export class AppComponent {
   menu: Menu;
 
-  constructor() {
-    this.menu = new Menu();
+  constructor(private retroApi: RetroLiteApiService) {
+    this.menu = retroApi.menu;
   }
 }

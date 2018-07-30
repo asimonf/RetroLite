@@ -22,6 +22,7 @@ namespace RetroLite.Scene
         private readonly List<SubscriptionToken> _eventTokens;
         private readonly StateManager _stateManager;
         private readonly EventBus _eventBus;
+        private bool _running = false;
 
         public int Order => 0;
 
@@ -32,6 +33,18 @@ namespace RetroLite.Scene
             _eventBus = eventBus;
             
             _eventTokens.Add(_eventBus.Subscribe<LoadGameEvent>(OnLoadGameEvent));
+            _eventTokens.Add(_eventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
+            _eventTokens.Add(_eventBus.Subscribe<CloseMenuEvent>(OnCloseMenuEvent));
+        }
+        
+        private void OnOpenMenuEvent(OpenMenuEvent openMenuEvent)
+        {
+            _running = false;
+        }
+        
+        private void OnCloseMenuEvent(CloseMenuEvent closeMenuEvent)
+        {
+            _running = true;
         }
         
         public int CompareTo(IScene other)
@@ -71,6 +84,7 @@ namespace RetroLite.Scene
             core.LoadGame(path);
 
             _currentCore = core;
+            _running = true;
         }
 
         public void Draw()
@@ -80,17 +94,17 @@ namespace RetroLite.Scene
 
         public float[] GetAudioData(int frames)
         {
-            return _currentCore?.GetAudioData(frames);
+            return _running ? _currentCore?.GetAudioData(frames) : null;
         }
 
         public void HandleEvents()
         {
-            _currentCore?.HandleEvents();
         }
 
         public void Update()
         {
-            _currentCore?.Update();
+            if (_running)
+                _currentCore?.Update();
         }
         
         

@@ -30,6 +30,8 @@ namespace RetroLite.Scene
         private readonly InputProcessor _inputProcessor;
         private readonly EventBus _eventBus;
 
+        private bool _open = true;
+
         public int Order => 1;
 
         public Menu(
@@ -93,11 +95,13 @@ namespace RetroLite.Scene
         private void OnOpenMenuEvent(OpenMenuEvent openMenuEvent)
         {
             _inputProcessor.ResetControllers();
+            _open = true;
         }
         
         private void OnCloseMenuEvent(CloseMenuEvent closeMenuEvent)
         {
             _inputProcessor.ResetControllers();
+            _open = false;
         }
 
         public void HandleEvents()

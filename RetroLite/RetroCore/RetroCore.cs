@@ -404,11 +404,6 @@ namespace RetroLite.RetroCore
             }
         }
 
-        public void HandleEvents()
-        {
-            
-        }
-
         public void Update()
         {
             if (GameLoaded)

@@ -31,8 +31,19 @@ namespace RetroLite.Event
             while (_eventQueue.Count > 0)
             {
                 if (!_eventQueue.TryDequeue(out var pendingEvent)) continue;
-                
-                _eventBus.Publish(pendingEvent.Item2);
+
+                switch (pendingEvent.Item2)
+                {
+                    case LoadGameEvent e:
+                        _eventBus.Publish(e);
+                        break;
+                    case OpenMenuEvent e:
+                        _eventBus.Publish(e);
+                        break;
+                    case CloseMenuEvent e:
+                        _eventBus.Publish(e);
+                        break;
+                }
                 pendingEvent.Item1.Set();
             }
         }

@@ -5,7 +5,15 @@ export class Menu {
     this.state = 'active';
   }
 
-  toggleState() {
-    this.state = this.state === 'active' ? 'inactive' : 'active';
+  deactivate() {
+    this.state = 'inactive';
+  }
+
+  activate() {
+    this.state = 'active';
+  }
+
+  isActive(): boolean {
+    return this.state === 'active';
   }
 }

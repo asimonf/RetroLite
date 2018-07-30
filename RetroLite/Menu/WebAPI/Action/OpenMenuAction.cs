@@ -14,7 +14,7 @@ namespace RetroLite.Menu.WebAPI.Action
 {
     internal class OpenMenuAction : IAction
     {
-        public string Path => "/event/open-menu";
+        public string Path => "^/event/open-menu$";
 
         public string Method => "GET";
 
