@@ -6,7 +6,6 @@ using LibRetro;
 using LibRetro.Types;
 using NLog;
 using RetroLite.Input;
-using RetroLite.Scene;
 using RetroLite.Video;
 using SDL2;
 using SRC_CS;
@@ -47,7 +46,7 @@ namespace RetroLite.RetroCore
 
         private double _audioResampleRatio;
         private int _temporaryAudioBufferPosition = 0;
-        private readonly byte[] _temporaryAudioBuffer;
+        private readonly short[] _temporaryAudioBuffer;
         private readonly float[] _temporaryConversionBuffer;
         private readonly float[] _temporaryResampleBuffer;
         private readonly float[] _temporaryOutputBuffer;
@@ -99,11 +98,11 @@ namespace RetroLite.RetroCore
 
             // Audio Buffers
             // TODO: tweak buffer sizes to minimize memory consumption
-            _temporaryAudioBuffer = new byte[8192];
+            _temporaryAudioBuffer = new short[8192];
             _temporaryConversionBuffer = new float[8192];
             _temporaryResampleBuffer = new float[8192];
             _temporaryOutputBuffer = new float[8192];
-            _audioBuffer = new CircularBuffer(8192 * 4);
+            _audioBuffer = new CircularBuffer(8192);
 
             _config = config;
             _inputProcessor = inputProcessor;
@@ -184,7 +183,7 @@ namespace RetroLite.RetroCore
 
             if (IntPtr.Zero == data || IntPtr.Zero == _framebuffer)
             {
-                Logger.Warn($"Invalid framebuffer in '{this._coreName}'");
+                Logger.Warn($"Invalid framebuffer in '{_coreName}'");
                 return;
             }
 
@@ -214,16 +213,14 @@ namespace RetroLite.RetroCore
 
         private void _audioSample(short left, short right)
         {
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition] = (byte) (left & 0xFF);
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 1] = (byte) (left >> 8);
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 2] = (byte) (right & 0xFF);
-            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 3] = (byte) (right >> 8);
-            _temporaryAudioBufferPosition += 4;
+            _temporaryAudioBuffer[_temporaryAudioBufferPosition] = left;
+            _temporaryAudioBuffer[_temporaryAudioBufferPosition + 1] = right;
+            _temporaryAudioBufferPosition += 2;
         }
 
         private ulong _audioSampleBatch(IntPtr data, ulong frames)
         {
-            var size = (int) frames * 4;
+            var size = (int) frames * 2;
             Marshal.Copy(data, _temporaryAudioBuffer, _temporaryAudioBufferPosition, size);
             _temporaryAudioBufferPosition += size;
 
@@ -469,44 +466,43 @@ namespace RetroLite.RetroCore
         {
             unsafe
             {
-                var frames = _temporaryAudioBufferPosition / 4;
-                fixed (byte* dataPtr = &_temporaryAudioBuffer[0])
+                var frames = _temporaryAudioBufferPosition / 2;
+                fixed (float* conversionPtr = &_temporaryConversionBuffer[0])
                 {
-                    var shortDataPtr = (short*) dataPtr;
-                    fixed (float* conversionPtr = &_temporaryConversionBuffer[0])
+                    fixed (short* shortDataPtr = &_temporaryAudioBuffer[0])
                     {
                         SampleRate.src_short_to_float_array(shortDataPtr, conversionPtr,
                             _temporaryAudioBufferPosition);
+                    }
 
-                        if (_resampleNeeded)
+                    if (_resampleNeeded)
+                    {
+                        fixed (float* resamplePtr =
+                            &_temporaryResampleBuffer[0])
                         {
-                            fixed (float* resamplePtr =
-                                &_temporaryResampleBuffer[0])
+                            var convert = new SampleRate.SRC_DATA()
                             {
-                                var convert = new SampleRate.SRC_DATA()
-                                {
-                                    data_in = conversionPtr,
-                                    data_out = resamplePtr,
-                                    input_frames = frames,
-                                    output_frames = frames * 2,
-                                    src_ratio = _audioResampleRatio
-                                };
-                                var res = SampleRate.src_process(_resamplerState, ref convert);
+                                data_in = conversionPtr,
+                                data_out = resamplePtr,
+                                input_frames = frames,
+                                output_frames = frames * 2,
+                                src_ratio = _audioResampleRatio
+                            };
+                            var res = SampleRate.src_process(_resamplerState, ref convert);
 
-                                if (res != 0)
-                                {
-                                    Logger.Error(SampleRate.src_strerror(res));
-                                }
-                                else
-                                {
-                                    _audioBuffer.CopyFrom(_temporaryResampleBuffer, convert.output_frames_gen * 2);
-                                }   
+                            if (res != 0)
+                            {
+                                Logger.Error(SampleRate.src_strerror(res));
                             }
+                            else
+                            {
+                                _audioBuffer.CopyFrom(_temporaryResampleBuffer, convert.output_frames_gen * 2);
+                            }   
                         }
-                        else
-                        {
-                            _audioBuffer.CopyFrom(_temporaryConversionBuffer, frames * 2);
-                        }
+                    }
+                    else
+                    {
+                        _audioBuffer.CopyFrom(_temporaryConversionBuffer, frames * 2);
                     }
                 }
             }

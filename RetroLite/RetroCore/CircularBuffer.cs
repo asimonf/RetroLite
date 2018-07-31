@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
+    
 namespace RetroLite.RetroCore
 {
     public class CircularBuffer
@@ -35,14 +33,14 @@ namespace RetroLite.RetroCore
                 var newLength = Capacity - _end;
                 var remainder = length - newLength;
 
-                Buffer.BlockCopy(arr, 0, _backingBuffer, _end, newLength);
-                Buffer.BlockCopy(arr, newLength, _backingBuffer, 0, remainder);
-                
+                Array.Copy(arr, 0, _backingBuffer, _end, newLength);
+                Array.Copy(arr, newLength, _backingBuffer, 0, remainder);
+
                 _end = remainder;
             }
             else
             {
-                Buffer.BlockCopy(arr, 0, _backingBuffer, _end, length);
+                Array.Copy(arr, 0, _backingBuffer, _end, length);
                 _end = (_end + length) % Capacity;
             }
         }
@@ -66,14 +64,14 @@ namespace RetroLite.RetroCore
                 var newLength = Capacity - _start;
                 var remainder = length - newLength;
 
-                Buffer.BlockCopy(_backingBuffer, _start, destination, 0, newLength);
-                Buffer.BlockCopy(_backingBuffer, 0, destination, newLength, remainder);
+                Array.Copy(_backingBuffer, _start, destination, 0, newLength);
+                Array.Copy(_backingBuffer, 0, destination, newLength, remainder);
 
                 _start = remainder;
             }
             else if (length > 0)
             {
-                Buffer.BlockCopy(_backingBuffer, _start, destination, 0, length);
+                Array.Copy(_backingBuffer, _start, destination, 0, length);
 
                 _start = (_start + length) % Capacity;
             }
