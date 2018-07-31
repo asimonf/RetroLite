@@ -21,14 +21,18 @@ export class MenuComponent implements OnInit {
   }
 
   @HostListener('document:keyup', ['$event']) async onKeydownHandler(event: KeyboardEvent) {
+    if (this.retroApi.menu.isActive()) {
+      switch (event.key) {
+        case 'd':
+          await this.retroApi.loadGame(this.lastGameList[3].Id);
+          break;
+      }
+    }
+
     switch (event.key) {
-      case 'd':
-        await this.retroApi.loadGame(this.lastGameList[0].Id);
-        break;
       case 'Escape':
         await this.retroApi.toggleState();
         break;
     }
   }
-
 }

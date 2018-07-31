@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {Menu} from './model/menu';
-import {AnonymousSubject} from 'rxjs/internal-compatibility';
 
 export interface Game {
   Id: string;
