@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Redbus;
-using RetroLite.DB;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Menu;
-using RetroLite.RetroCore;
-using RetroLite.Scene;
 using Xilium.CefGlue;
 
 namespace RetroLite.Scene
