@@ -13,11 +13,6 @@ namespace RetroLite.Video
 
         public SurfaceRenderer(int width, int height)
         {
-            if (SDL.SDL_InitSubSystem(SDL.SDL_INIT_VIDEO) != 0)
-            {
-                throw new Exception("SDL Video Initialization error");
-            }
-            
             Width = width;
             Height = height;
             
@@ -40,7 +35,6 @@ namespace RetroLite.Video
         {
             SDL.SDL_DestroyRenderer(_sdlRenderer);
             SDL.SDL_FreeSurface(_sdlSurface);
-            SDL.SDL_QuitSubSystem(SDL.SDL_INIT_VIDEO);
         }
 
         public IntPtr LoadTextureFromFile(string path)

@@ -1,30 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using RetroLite.Scene;
+﻿using System.Collections.Generic;
+using NLog;
 using SDL2;
 
 namespace RetroLite.Input
 {
     public class InputProcessor
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        
         public const int MaxPorts = 4;
 
         private readonly Dictionary<int, GameController> _gameControllersById;
         private readonly GameController[] _ports;
-        private int _lastFreePort = 0;
+        private int _lastFreePort;
 
         public GameController this[int port] => _ports[port];
 
-        public int X { get; private set; } = 0;
-        public int Y { get; private set; } = 0;
+        public int X { get; private set; }
+        public int Y { get; private set; }
 
         public InputProcessor()
         {
-            if (SDL.SDL_InitSubSystem(SDL.SDL_INIT_JOYSTICK) != 0)
-            {
-                throw new Exception("SDL Joystick Initialization error");
-            }
-            
             _gameControllersById = new Dictionary<int, GameController>();
             _ports = new GameController[MaxPorts];
             _ports[0] = new GameController();
@@ -53,8 +49,6 @@ namespace RetroLite.Input
             }
 
             _gameControllersById.Clear();
-            
-            SDL.SDL_QuitSubSystem(SDL.SDL_INIT_JOYSTICK);
         }
 
         private void _assignGameControllerToPort(GameController controller)
@@ -73,23 +67,17 @@ namespace RetroLite.Input
                 controller?.Reset();
             }
         }
-        
-        
 
-        public void HandleEvents()
+        public void Poll()
         {
-            //Handle events on queue
-            for (var index = 0; index < _ports.Length; index++)
-            {
-                var controller = _ports[index];
-                controller?.CleanupKeyUp();
-            }
             while (SDL.SDL_PollEvent(out var e) != 0)
             {
                 switch (e.type)
                 {
                     case SDL.SDL_EventType.SDL_CONTROLLERDEVICEADDED:
                     {
+                        Logger.Debug("Added Device");
+                        
                         var gameController = _lastFreePort > 0 ? new GameController() : _ports[_lastFreePort++];
 
                         gameController.InitializeAsJoystick(e.cdevice.which);
@@ -103,6 +91,8 @@ namespace RetroLite.Input
                     
                     case SDL.SDL_EventType.SDL_CONTROLLERDEVICEREMOVED:
                     {
+                        Logger.Debug("Removed Device");
+                        
                         using (var gameController = _gameControllersById[e.cdevice.which])
                         {
                             _gameControllersById.Remove(e.cdevice.which);
@@ -122,9 +112,12 @@ namespace RetroLite.Input
                     }
                     case SDL.SDL_EventType.SDL_CONTROLLERBUTTONDOWN:
                     case SDL.SDL_EventType.SDL_CONTROLLERBUTTONUP:
+                        Logger.Debug("Device Button Pressed");
+
                         _gameControllersById[e.cbutton.which].ProcessButtonEvent(e.cbutton);
                         break;
                     case SDL.SDL_EventType.SDL_CONTROLLERAXISMOTION:
+                        Logger.Debug("Device Axis Moved");
                         _gameControllersById[e.caxis.which].ProcessAxisEvent(e.caxis);
                         break;
                     case SDL.SDL_EventType.SDL_KEYDOWN:
@@ -141,6 +134,17 @@ namespace RetroLite.Input
                         break;
                 }
             }
+        }
+
+        public void HandleEvents()
+        {
+            //Handle events on queue
+            for (var index = 0; index < _ports.Length; index++)
+            {
+                var controller = _ports[index];
+                controller?.CleanupKeyUp();
+            }
+            Poll();
         }
 
         public static VirtualKeys GetVirtualKey(GameControllerButton button)

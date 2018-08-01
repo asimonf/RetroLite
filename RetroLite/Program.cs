@@ -44,10 +44,15 @@ namespace RetroLite
                 
                 Logger.Info("Initializing SDL");
 
-                if (SDL.SDL_Init(0) != 0)
+                if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
                 {
                     Logger.Error(new Exception("SDL Initialization error"));
                 }
+
+#if(DEBUG)
+                SDL.SDL_GetVersion(out var version);
+                Logger.Debug($"SDL: {version.major}.{version.minor}.{version.patch}");
+#endif
                 
                 if (SDL_ttf.TTF_Init() != 0)
                 {
@@ -118,7 +123,12 @@ namespace RetroLite
             var consoleTarget = new ColoredConsoleTarget();
             consoleTarget.Layout = "${date: format = HH\\:MM\\:ss}: ${message}";
             loggingConfiguration.AddTarget("console", consoleTarget);
-            var rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
+#if(DEBUG)
+            var logLevel = LogLevel.Debug;
+#else
+            var logLevel = LogLevel.Error;
+#endif
+            var rule1 = new LoggingRule("*", logLevel, consoleTarget);
             loggingConfiguration.LoggingRules.Add(rule1);
             LogManager.Configuration = loggingConfiguration;
         }

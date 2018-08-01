@@ -48,10 +48,16 @@ namespace RetroLite.Scene
             _eventTokenList = new List<SubscriptionToken>();
             _eventBus = eventBus;
 
+#if(DEBUG)            
+            var logSeverity = CefLogSeverity.Debug;
+#else
+            var logSeverity = CefLogSeverity.Error;
+#endif
+
             var settings = new CefSettings
             {
                 WindowlessRenderingEnabled = true, 
-                LogSeverity = CefLogSeverity.Debug,
+                LogSeverity = logSeverity,
                 NoSandbox = true
             };
 
@@ -73,7 +79,6 @@ namespace RetroLite.Scene
                 _browserClient,
                 browserSettings,
                 "http://localhost:4200"
-//                "https://browserbench.org/MotionMark/"
             );
 
             _eventTokenList.Add(_eventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
@@ -108,9 +113,8 @@ namespace RetroLite.Scene
         {
             var menuController = _inputProcessor[0];
 
-            for (var index = 0; index < _buttons.Length; index++)
+            foreach (var button in _buttons)
             {
-                var button = _buttons[index];
                 var currentState = menuController.GetButtonState(button);
 
                 if (currentState == GameControllerButtonState.None) continue;
@@ -125,22 +129,6 @@ namespace RetroLite.Scene
                 };
 
                 _browser.GetHost().SendKeyEvent(cefKeyEvent);
-
-                if (button == GameControllerButton.Start &&
-                    currentState == GameControllerButtonState.Up)
-                {
-                    _browser.GetHost().SendMouseClickEvent(new CefMouseEvent()
-                    {
-                        X = _inputProcessor.X,
-                        Y = _inputProcessor.Y
-                    }, CefMouseButtonType.Left, false, 1);
-                    
-                    _browser.GetHost().SendMouseClickEvent(new CefMouseEvent()
-                    {
-                        X = _inputProcessor.X,
-                        Y = _inputProcessor.Y
-                    }, CefMouseButtonType.Left, true, 1);
-                }
             }
         }
 
@@ -159,12 +147,9 @@ namespace RetroLite.Scene
             return null;
         }
         
-        
         public int CompareTo(IScene other)
         {
-            if (other == null) return 1;
-
-            return Order.CompareTo(other.Order);
+            return other == null ? 1 : Order.CompareTo(other.Order);
         }
     }
 }

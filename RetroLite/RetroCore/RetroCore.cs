@@ -49,9 +49,9 @@ namespace RetroLite.RetroCore
         private readonly short[] _temporaryAudioBuffer;
         private readonly float[] _temporaryConversionBuffer;
         private readonly float[] _temporaryResampleBuffer;
+        private readonly CircularBuffer _audioBuffer;
         private readonly float[] _temporaryOutputBuffer;
         private IntPtr _resamplerState;
-        private readonly CircularBuffer _audioBuffer;
         private bool _resampleNeeded;
 
         #endregion
@@ -97,12 +97,11 @@ namespace RetroLite.RetroCore
             GameLoaded = false;
 
             // Audio Buffers
-            // TODO: tweak buffer sizes to minimize memory consumption
-            _temporaryAudioBuffer = new short[8192];
-            _temporaryConversionBuffer = new float[8192];
-            _temporaryResampleBuffer = new float[8192];
-            _temporaryOutputBuffer = new float[8192];
-            _audioBuffer = new CircularBuffer(8192);
+            _temporaryAudioBuffer = new short[4096];
+            _temporaryConversionBuffer = new float[4096];
+            _temporaryResampleBuffer = new float[4096];
+            _temporaryOutputBuffer = new float[4096];
+            _audioBuffer = new CircularBuffer(4096);
 
             _config = config;
             _inputProcessor = inputProcessor;
@@ -229,7 +228,7 @@ namespace RetroLite.RetroCore
 
         private void _inputPoll()
         {
-            //TODO: implement
+//            _inputProcessor.Poll();
         }
 
         private short _inputState(uint port, RetroDevice device, uint index, uint id)
