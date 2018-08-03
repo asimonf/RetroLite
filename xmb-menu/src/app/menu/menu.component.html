@@ -1,19 +1,19 @@
+<app-background [@state]="menu.state"></app-background>
+
 <div id="xmb-container">
-  <div id="xmb-menu">
-    <ul>
-      <li *ngFor="let menuList of menu.lists" [class.active]="menuList.active">
-        <div class="cell" [class.active]="menuList.active">
-          <i class="material-icons xmb-icon">{{menuList.title}}</i> <label>{{menuList.icon}}</label>
-        </div>
-        <ul>
-          <li *ngFor="let menuElement of menuList.items" class="cell submenu" [class.active]="menuElement.active">
-            <a href="#missinglink">
-              <i class="material-icons xmb-icon">{{menuElement.icon}}</i>
-              <label>{{menuElement.icon}} <label class="subtitle">{{menuElement.subtitle}}</label></label>
-            </a>
-          </li>
-        </ul>
-      </li>
-    </ul>
-  </div>
+  <ul id="xmb-menu">
+    <li *ngFor="let menuList of menu.lists" [class.active]="menuList.active">
+      <div class="cell" [class.active]="menuList.active">
+        <i class="material-icons xmb-icon">{{menuList.title}}</i> <label>{{menuList.icon}}</label>
+      </div>
+      <ul class="xmb-submenu">
+        <li *ngFor="let menuElement of menuList.items" class="cell submenu" [class.active]="menuElement.active">
+          <a href="#missinglink">
+            <i class="material-icons xmb-icon">{{menuElement.icon}}</i>
+            <label>{{menuElement.icon}} <label class="subtitle">{{menuElement.subtitle}}</label></label>
+          </a>
+        </li>
+      </ul>
+    </li>
+  </ul>
 </div>

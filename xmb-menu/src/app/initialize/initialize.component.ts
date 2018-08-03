@@ -40,13 +40,13 @@ export class InitializeComponent implements OnInit {
   }
 
   ngOnInit() {
-    Promise.all([
-      this.retroApi.initialize().then(() => {
-        this.retroApi.refreshGameList().then((data) => {
-          this.router.navigate(['/menu']);
-        });
-      }),
-    ]);
+    this.retroApi.initialize().then(() => {
+      this.retroApi.refreshGameList().then((data) => {
+        this.router.navigate(['/menu']);
+      });
+    }).catch(() => {
+      this.router.navigate(['/menu']);
+    });;
   }
 
 }

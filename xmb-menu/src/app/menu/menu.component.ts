@@ -1,13 +1,25 @@
-import {Component, HostListener, OnInit} from '@angular/core';
+import {AfterViewInit, Component, HostListener, OnInit} from '@angular/core';
 import {Game, RetroLiteApiService} from '../retro-lite-api.service';
 import {Menu} from '../model/menu';
+import {animate, state, style, transition, trigger} from '@angular/animations';
 
 @Component({
   selector: 'app-menu',
   templateUrl: './menu.component.html',
-  styleUrls: ['./menu.component.css']
+  styleUrls: ['./menu.component.css'],
+  animations: [
+    trigger('state', [
+      state('inactive', style({
+        opacity: 0
+      })),
+      state('active',   style({
+        opacity: 1
+      })),
+      transition('active <=> inactive', animate('1000ms ease'))
+    ])
+  ]
 })
-export class MenuComponent implements OnInit {
+export class MenuComponent implements OnInit, AfterViewInit {
   lastGameList: Game[];
   menu: Menu;
 
@@ -19,6 +31,7 @@ export class MenuComponent implements OnInit {
   }
 
   ngOnInit() {
+
   }
 
   @HostListener('document:keyup', ['$event']) async onKeydownHandler(event: KeyboardEvent) {
@@ -38,5 +51,9 @@ export class MenuComponent implements OnInit {
           break;
       }
     }
+  }
+
+  ngAfterViewInit(): void {
+    this.menu.activate();
   }
 }

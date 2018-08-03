@@ -7,7 +7,7 @@ export class Menu {
   readonly lists: MenuList[];
 
   constructor() {
-    this.state = 'active';
+    this.state = 'inactive';
     this.listIndex = 0;
 
     this.lists = [

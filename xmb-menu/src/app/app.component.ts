@@ -13,17 +13,6 @@ import {RetroLiteApiService} from './retro-lite-api.service';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  animations: [
-    trigger('state', [
-      state('inactive', style({
-        opacity: 0
-      })),
-      state('active',   style({
-        opacity: 1
-      })),
-      transition('active <=> inactive', animate('1000ms ease'))
-    ])
-  ]
 })
 export class AppComponent {
   menu: Menu;
