@@ -47,6 +47,18 @@ export class MenuComponent implements OnInit, AfterViewInit {
         case 'Escape':
           await this.retroApi.toggleState();
           break;
+        case 'ArrowLeft':
+          this.menu.changeList(-1);
+          break;
+        case 'ArrowRight':
+          this.menu.changeList(1);
+          break;
+        case 'ArrowUp':
+          this.menu.changeElement(-1);
+          break;
+        case 'ArrowDown':
+          this.menu.changeElement(1);
+          break;
       }
     } else {
       switch (event.key) {

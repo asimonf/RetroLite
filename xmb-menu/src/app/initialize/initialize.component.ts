@@ -46,7 +46,7 @@ export class InitializeComponent implements OnInit {
       });
     }).catch(() => {
       this.router.navigate(['/menu']);
-    });;
+    });
   }
 
 }

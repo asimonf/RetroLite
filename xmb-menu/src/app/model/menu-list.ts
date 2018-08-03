@@ -16,6 +16,7 @@ export class MenuList {
   }
 
   changeElement(offset: number) {
+    this.items[this.elementIndex].active = false;
     this.elementIndex += offset;
 
     if (this.elementIndex >= this.items.length) {
@@ -23,5 +24,6 @@ export class MenuList {
     } else if (this.elementIndex < 0) {
       this.elementIndex += this.items.length;
     }
+    this.items[this.elementIndex].active = true;
   }
 }

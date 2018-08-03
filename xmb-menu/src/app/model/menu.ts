@@ -44,6 +44,7 @@ export class Menu {
   }
 
   changeList(direction: number) {
+    this.lists[this.listIndex].active = false;
     this.listIndex += direction;
 
     if (this.listIndex >= this.lists.length) {
@@ -51,6 +52,7 @@ export class Menu {
     } else if (this.listIndex < 0) {
       this.listIndex += this.lists.length;
     }
+    this.lists[this.listIndex].active = true;
   }
 
   changeElement(offset: number) {
