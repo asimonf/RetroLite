@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, HostListener, OnInit} from '@angular/core';
+import {AfterViewInit, Component, HostBinding, HostListener, OnInit} from '@angular/core';
 import {Game, RetroLiteApiService} from '../retro-lite-api.service';
 import {Menu} from '../model/menu';
 import {animate, state, style, transition, trigger} from '@angular/animations';
@@ -32,6 +32,10 @@ export class MenuComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
 
+  }
+
+  @HostBinding('@state') get menuState() {
+    return this.menu.state;
   }
 
   @HostListener('document:keyup', ['$event']) async onKeydownHandler(event: KeyboardEvent) {

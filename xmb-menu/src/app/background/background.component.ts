@@ -281,7 +281,6 @@ export class BackgroundComponent implements AfterViewInit {
       drawFlow(drawParams);
       drawParticles(drawParams);
     });
-    this.tick.cancel();
   }
 
   makeFlowVertices() {

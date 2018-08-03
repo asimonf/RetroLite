@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Video;
@@ -101,14 +102,28 @@ namespace RetroLite.Scene
             var targetFrametime = (1000.0 / _config.TargetFps);
             
             if (!(targetFrametime > elapsedTime)) return;
-            
-            var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
 
-            // Busy loop. This is to increase accuracy of the timing function
-            _nopTimer.Restart();
-            while (_nopTimer.ElapsedTicks < durationTicks) ;
+            var sleepTime = (int) (targetFrametime - elapsedTime) - 1;
+
+            if (sleepTime > 0)
+            {
+                // Experimental to reduce CPU usage. Hoping that Sleep is actually accurate to the millisecond
+                Thread.Sleep(sleepTime);
+                var remainder = (targetFrametime - elapsedTime) - sleepTime;
+                var durationTicks = remainder * (Stopwatch.Frequency / 1000.0);
+                // Busy loop. This is to increase accuracy
+                _nopTimer.Restart();
+                while (_nopTimer.ElapsedTicks < durationTicks) ;
+            }
+            else
+            {
+                var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
+                // Busy loop. This is to increase accuracy
+                _nopTimer.Restart();
+                while (_nopTimer.ElapsedTicks < durationTicks) ;
+            }
         }
-        
+
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,
             ulong position, bool timeValid, ulong error, object user)
         {
