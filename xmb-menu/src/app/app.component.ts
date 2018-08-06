@@ -15,9 +15,6 @@ import {RetroLiteApiService} from './retro-lite-api.service';
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  menu: Menu;
-
-  constructor(private retroApi: RetroLiteApiService) {
-    this.menu = retroApi.menu;
+  constructor() {
   }
 }

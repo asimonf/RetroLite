@@ -4,22 +4,15 @@ using Xilium.CefGlue;
 
 namespace RetroLite.Menu.WebAPI.Action
 {
-    public class InitializeAction : IAction
+    public class QuitAction : IAction
     {
-        public string Path => "^/initialize$";
+        public string Path => "^/quit$";
 
         public string Method => "POST";
         
-        private readonly StateManager _stateManager;
-
-        public InitializeAction(StateManager stateManager)
-        {
-            _stateManager = stateManager;
-        }
-        
         public ApiResponse ProcessRequest(CefRequest request, IDictionary<string, string> parameters)
         {
-            _stateManager.Initialize();
+            Program.Running = false;
             
             return new ApiResponse(
                 null,

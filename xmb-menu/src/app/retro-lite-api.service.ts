@@ -16,54 +16,68 @@ export class RetroLiteApiService {
 
   private url = 'http://api.retrolite.internal/';
 
-  private gamesList: Game[] = [];
-  private readonly games$: BehaviorSubject<Game[]>;
-  readonly menu: Menu = new Menu();
-  private isGameRunning = false;
-  private isGameLoaded = false;
+  private _gamesList: Game[] = [];
+  private readonly _games$: BehaviorSubject<Game[]>;
+  private _isGameRunning = false;
+  private _isGameLoaded = false;
 
   constructor(private http: HttpClient) {
-    this.games$ = new BehaviorSubject<Game[]>([]);
+    this._games$ = new BehaviorSubject<Game[]>([]);
   }
 
   initialize() {
-    return this.http.get(this.url + 'initialize').toPromise();
+    return this.http.post(this.url + 'initialize', {}).toPromise();
   }
 
   getGames$() {
-    return this.games$.asObservable();
+    return this._games$.asObservable();
+  }
+
+  get isGameLoaded(): boolean {
+    return this._isGameLoaded;
+  }
+
+  async quit() {
+    return this.http.post(this.url + 'quit', {}).toPromise();
   }
 
   async loadGame(id: string) {
-    if (this.isGameLoaded) {
+    if (this._isGameLoaded) {
       return Promise.reject();
     }
 
     return this.http.post(this.url + 'games/' + id + '/load', null).toPromise().then(() => {
-      this.isGameRunning = true;
-      this.isGameLoaded = true;
-      this.menu.deactivate();
+      this._isGameRunning = true;
+      this._isGameLoaded = true;
     });
   }
 
-  async toggleState() {
-    if (!this.isGameLoaded) { return; }
+  async pause() {
+    if (!this._isGameLoaded) {
+      return;
+    }
 
-    if (this.isGameRunning) {
+    if (this._isGameRunning) {
       await this._pause();
-      this.menu.activate();
-      this.isGameRunning = false;
-    } else {
+      this._isGameRunning = false;
+    }
+  }
+
+  async resume() {
+    if (!this._isGameLoaded) {
+      return;
+    }
+
+    if (!this._isGameRunning) {
       await this._resume();
-      this.menu.deactivate();
-      this.isGameRunning = true;
+      this._isGameRunning = true;
     }
   }
 
   refreshGameList() {
     return this.http.get<Game[]>(this.url + 'games').toPromise().then((games: Game[]) => {
-      this.gamesList = games;
-      this.games$.next(this.gamesList);
+      this._gamesList = games;
+      this._games$.next(this._gamesList);
     });
   }
 

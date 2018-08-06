@@ -21,10 +21,10 @@ import {animate, state, style, transition, trigger} from '@angular/animations';
 })
 export class MenuComponent implements OnInit, AfterViewInit {
   lastGameList: Game[];
-  menu: Menu;
+  readonly menu: Menu;
 
   constructor(private retroApi: RetroLiteApiService) {
-    this.menu = retroApi.menu;
+    this.menu = new Menu(retroApi);
     retroApi.getGames$().subscribe((val) => {
       this.lastGameList = val;
     });
@@ -41,11 +41,11 @@ export class MenuComponent implements OnInit, AfterViewInit {
   @HostListener('document:keyup', ['$event']) async onKeydownHandler(event: KeyboardEvent) {
     if (this.menu.isActive()) {
       switch (event.key) {
-        case 'd':
-          await this.retroApi.loadGame(this.lastGameList[3].Id);
-          break;
+        // case 'd':
+        //   await this.retroApi.loadGame(this.lastGameList[3].Id);
+        //   break;
         case 'Escape':
-          await this.retroApi.toggleState();
+          await this.menu.toggleState();
           break;
         case 'ArrowLeft':
           this.menu.changeList(-1);
@@ -59,11 +59,14 @@ export class MenuComponent implements OnInit, AfterViewInit {
         case 'ArrowDown':
           this.menu.changeElement(1);
           break;
+        case 'd':
+          this.menu.select();
+          break;
       }
     } else {
       switch (event.key) {
         case 'Escape':
-          await this.retroApi.toggleState();
+          await this.menu.toggleState();
           break;
       }
     }

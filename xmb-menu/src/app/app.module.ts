@@ -9,6 +9,8 @@ import { InitializeComponent } from './initialize/initialize.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { MenuComponent } from './menu/menu.component';
 import {BackgroundComponent} from './background/background.component';
+import { MenuListComponent } from './menu-list/menu-list.component';
+import { MenuItemComponent } from './menu-item/menu-item.component';
 
 const appRoutes: Routes = [
   { path: 'initialize', component: InitializeComponent },
@@ -27,6 +29,8 @@ const appRoutes: Routes = [
     PageNotFoundComponent,
     MenuComponent,
     BackgroundComponent,
+    MenuListComponent,
+    MenuItemComponent,
   ],
   imports: [
     RouterModule.forRoot(

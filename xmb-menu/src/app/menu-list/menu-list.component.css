@@ -1,0 +1,60 @@
+:host {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  max-height: 120px;
+  transition: all 0.3s;
+}
+
+.xmb-submenu {
+  opacity: 0;
+  display: inline-flex;
+  transition: all 0.3s;
+  flex-direction: column;
+  width: 100px;
+  margin: 10px;
+  position: absolute;
+  padding: 0;
+  list-style-type: none;
+}
+
+:host.active {
+  margin-right: 100px;
+}
+
+.cell {
+  width: 100px;
+  height: 100px;
+  margin: 10px;
+  background-color: transparent;
+  opacity: 0.4;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+:host.active .cell {
+  opacity: 1;
+  display: inline-block;
+}
+
+:host.active .xmb-submenu {
+  opacity: 1;
+}
+
+:host label {
+  display: block;
+  text-align: center;
+  text-shadow: 0px 0px 5px #000000;
+  font-size: 20px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.xmb-icon {
+  text-align: center;
+  width: 100%;
+  font-size: 65px;
+  text-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+}

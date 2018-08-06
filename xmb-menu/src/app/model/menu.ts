@@ -1,42 +1,75 @@
 import {MenuList} from './menu-list';
-import {MenuElement} from './menu-element';
+import {MenuItem} from './menu-item';
+import {MenuListComponent} from '../menu-list/menu-list.component';
+import {Game, RetroLiteApiService} from '../retro-lite-api.service';
 
 export class Menu {
   state: string;
   listIndex: number;
   readonly lists: MenuList[];
 
-  constructor() {
+  private readonly mainMenuList: MenuList;
+
+  constructor(private retroApi: RetroLiteApiService) {
     this.state = 'inactive';
     this.listIndex = 0;
+    this.mainMenuList = new MenuList('RetroLite', 'settings', [
+      new MenuItem('Scan Games', 'Search the games', 'info', true, () => {
+        return retroApi.refreshGameList();
+      }),
+      new MenuItem('Quit', 'Exit the frontend', 'info', false, () => {
+        return retroApi.quit();
+      }),
+    ], true, MenuListComponent);
 
     this.lists = [
-      new MenuList('settings', 'settings', [
-        new MenuElement('info', 'subtitle', 'info', true),
-        new MenuElement('grade', 'subtitle', 'grade', false),
-        new MenuElement('toll', 'subtitle', 'toll', false),
-        new MenuElement('grade', 'subtitle', 'grade', false),
-        new MenuElement('toll', 'subtitle', 'toll', false),
-      ], true),
-      new MenuList('explore', 'explore', [
-        new MenuElement('face', 'subtitle', 'face', true),
-        new MenuElement('grade', 'subtitle', 'grade', false),
-        new MenuElement('toll', 'subtitle', 'toll', false),
-        new MenuElement('grade', 'subtitle', 'grade', false),
-      ], false),
-      new MenuList('play_arrow', 'play_arrow', [
-        new MenuElement('face', 'subtitle', 'face', true),
-        new MenuElement('explore', 'subtitle', 'explore', false),
-      ], false),
+      this.mainMenuList
     ];
+
+    retroApi.getGames$().subscribe((gameList: Game[]) => {
+      const systemsList = [];
+      const gameListPerSystem = {};
+      this.lists.length = 0;
+      this.lists.push(this.mainMenuList);
+
+      gameList.forEach((game: Game) => {
+        if (systemsList.lastIndexOf(game.System) < 0) {
+          systemsList.push(game.System);
+          gameListPerSystem[game.System] = [];
+        }
+        gameListPerSystem[game.System].push(
+          new MenuItem(game.Name, game.Id, 'play_arrow', gameListPerSystem[game.System].length === 0, async () => {
+            await this.retroApi.loadGame(game.Id);
+            this.deactivate();
+            return Promise.resolve();
+          })
+        );
+      });
+
+      systemsList.forEach((system: string) => {
+        this.lists.push(new MenuList(system, 'info', gameListPerSystem[system], false, MenuListComponent));
+      });
+    });
   }
 
-  deactivate() {
+  async toggleState() {
+    if (this.retroApi.isGameLoaded) {
+      if (this.state === 'inactive') {
+        await this.activate();
+      } else {
+        await this.deactivate();
+      }
+    }
+  }
+
+  async deactivate() {
     this.state = 'inactive';
+    await this.retroApi.resume();
   }
 
-  activate() {
+  async activate() {
     this.state = 'active';
+    await this.retroApi.pause();
   }
 
   isActive(): boolean {
@@ -61,5 +94,9 @@ export class Menu {
 
   currentList(): MenuList {
     return this.lists[this.listIndex];
+  }
+
+  select() {
+    this.currentList().select();
   }
 }

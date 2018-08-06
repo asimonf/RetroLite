@@ -1,18 +1,39 @@
-import {MenuElement} from './menu-element';
+import {MenuItem} from './menu-item';
+import {Type} from '@angular/core';
+import {Observable, Subscription} from 'rxjs';
+
+export interface IMenuListComponent {
+  menuList: MenuList;
+}
 
 export class MenuList {
-  readonly title: string;
-  active: boolean;
-  readonly icon: string;
-  readonly items: MenuElement[];
   elementIndex: number;
 
-  constructor(title: string, icon: string, items: MenuElement[], active: boolean) {
-    this.title = title;
-    this.icon = icon;
-    this.items = items;
-    this.active = active;
+  private subscription: Subscription = null;
+
+  constructor(
+    public readonly title: string,
+    public readonly icon: string,
+    public items: MenuItem[],
+    public active: boolean,
+    public readonly component: Type<any>
+  ) {
     this.elementIndex = 0;
+  }
+
+  subscribeTo(observable: Observable<MenuItem[]>) {
+    if (null !== this.subscription) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
+
+    this.subscription = observable.subscribe((items) => {
+      this.items = items;
+
+      if (this.elementIndex >= items.length) {
+        this.elementIndex = items.length - 1;
+      }
+    });
   }
 
   changeElement(offset: number) {
@@ -25,5 +46,13 @@ export class MenuList {
       this.elementIndex += this.items.length;
     }
     this.items[this.elementIndex].active = true;
+  }
+
+  currentItem(): MenuItem {
+    return this.items[this.elementIndex];
+  }
+
+  select() {
+    this.currentItem().select();
   }
 }

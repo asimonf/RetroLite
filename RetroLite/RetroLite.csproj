@@ -101,6 +101,7 @@
     <Compile Include="Menu\WebAPI\Action\ListSystemsAction.cs" />
     <Compile Include="Menu\WebAPI\Action\LoadGameAction.cs" />
     <Compile Include="Menu\WebAPI\Action\OpenMenuAction.cs" />
+    <Compile Include="Menu\WebAPI\Action\QuitAction.cs" />
     <Compile Include="Menu\WebAPI\Action\ScanGamesAction.cs" />
     <Compile Include="Menu\WebAPI\ApiRequestHandler.cs" />
     <Compile Include="Menu\WebAPI\ApiResponse.cs" />

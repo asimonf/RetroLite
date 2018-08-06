@@ -1,0 +1,6 @@
+<div class="cell" [class.active]="menuList.active">
+  <i class="material-icons xmb-icon">{{menuList.icon}}</i> <label>{{menuList.title}}</label>
+</div>
+<ul class="xmb-submenu" [style.transform]="'translateY(' + -menuList.elementIndex * 100 + 'px)'">
+  <app-menu-item *ngFor="let menuItem of menuList.items" [class.active]="menuItem.active" [menuItem]="menuItem"></app-menu-item>
+</ul>
