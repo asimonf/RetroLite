@@ -2,9 +2,9 @@
     
 namespace RetroLite.RetroCore
 {
-    public class CircularBuffer
+    public class CircularBuffer<T>
     {
-        private readonly float[] _backingBuffer;
+        private readonly T[] _backingBuffer;
 
         private int _start;
         private int _end;
@@ -20,13 +20,28 @@ namespace RetroLite.RetroCore
         /// <param name="size">Size of the buffer in samples</param>
         public CircularBuffer(int size)
         {
-            _backingBuffer = new float[size];
+            _backingBuffer = new T[size];
             _start = 0;
             _end = 0;
             Glitches = 0;
         }
+
+        public void AddSample(T sample)
+        {
+            if (_end == Capacity)
+            {
+                _backingBuffer[0] = sample;
+
+                _end = 1;
+            }
+            else
+            {
+                
+                _end += 1;
+            }
+        }
         
-        public void CopyFrom(float[] arr, int length)
+        public void CopyFrom(T[] arr, int length)
         {
             if (_end + length > Capacity)
             {
@@ -45,16 +60,16 @@ namespace RetroLite.RetroCore
             }
         }
 
-        public void CopyTo(float[] destination, int length)
+        public void CopyTo(T[] destination, int length)
         {
             // Zero-fill if the request can't be filled with the current buffer contents
             if (length > CurrentLength)
             {
                 Glitches++;
-                for (var i = 0; i < length; i++)
-                {
-                    destination[i] = 0;
-                }
+                Console.Write(CurrentLength);
+                Console.Write(',');
+                Console.Write(length);
+                Console.Write('.');
 
                 return;
             }

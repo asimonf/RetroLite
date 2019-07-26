@@ -10,7 +10,7 @@
     <RootNamespace>SDL2</RootNamespace>
     <AssemblyName>SDL2-CS</AssemblyName>
     <LangVersion>7.2</LangVersion>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">

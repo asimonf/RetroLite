@@ -15,7 +15,7 @@ export class Menu {
     this.listIndex = 0;
     this.mainMenuList = new MenuList('RetroLite', 'settings', [
       new MenuItem('Scan Games', 'Search the games', 'info', true, () => {
-        return retroApi.refreshGameList();
+        return retroApi.scanGameList();
       }),
       new MenuItem('Quit', 'Exit the frontend', 'info', false, () => {
         return retroApi.quit();

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 using RetroLite.DB;
 using Xilium.CefGlue;
 
@@ -8,7 +9,7 @@ namespace RetroLite.Menu.WebAPI.Action
     {
         public string Path => "^/games/scan$|";
 
-        public string Method => "GET";
+        public string Method => "POST";
         
         private readonly StateManager _stateManager;
 
@@ -21,8 +22,10 @@ namespace RetroLite.Menu.WebAPI.Action
         {
             _stateManager.ScanForGames();
             
+            var response = _stateManager.GetGameList();
+            
             return new ApiResponse(
-                null,
+                JsonConvert.SerializeObject(response),
                 200
             );
         }

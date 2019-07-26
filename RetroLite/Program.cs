@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Reflection;
+using LibArvid;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
 using Redbus;
+using Redbus.Configuration;
+using Redbus.Interfaces;
 using RetroLite.DB;
 using RetroLite.Event;
 using RetroLite.Input;
@@ -21,10 +24,10 @@ namespace RetroLite
 {
     internal static class Program
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public static bool Running { get; set; } = true;
-        
+
         [STAThread]
         public static int Main(string[] args)
         {
@@ -32,7 +35,7 @@ namespace RetroLite
             var cefApp = new MenuCefApp();
 
             var res = CefRuntime.ExecuteProcess(cefMainArgs, cefApp, IntPtr.Zero);
-            
+
             if (res >= 0)
             {
                 return res;
@@ -42,6 +45,13 @@ namespace RetroLite
             {
                 InitializeLogger();
                 
+                Logger.Info("Initializing Arvid");
+
+                while (!ArvidClient.Connect("192.168.2.101"))
+                {
+                    Logger.Error("Could not connect to Arvid");
+                }
+
                 Logger.Info("Initializing SDL");
 
                 if (SDL.SDL_Init(SDL.SDL_INIT_JOYSTICK | SDL.SDL_INIT_VIDEO) != 0)
@@ -53,7 +63,7 @@ namespace RetroLite
                 SDL.SDL_GetVersion(out var version);
                 Logger.Debug($"SDL: {version.major}.{version.minor}.{version.patch}");
 #endif
-                
+
                 if (SDL_ttf.TTF_Init() != 0)
                 {
                     Logger.Error(new Exception("TTF Initialization error"));
@@ -79,21 +89,28 @@ namespace RetroLite
             }
             finally
             {
+                if (ArvidClient.IsConnected) ArvidClient.arvid_client_close();
                 SDL_ttf.TTF_Quit();
-                SDL.SDL_Quit();                
+                SDL.SDL_Quit();
             }
         }
 
         private static Container SetupContainer(CefMainArgs cefMainArgs, CefApp cefApp)
         {
             var container = new Container();
-            
+
             // Register Cef related instances
             container.RegisterInstance(cefMainArgs);
             container.RegisterInstance(cefApp);
+            container.RegisterInstance<IEventBusConfiguration>(
+                new EventBusConfiguration
+                {
+                    ThrowSubscriberException = false
+                }
+            );
 
             // Register renderer (TODO: maybe make it configurable?)
-            container.Register<IRenderer, SoftwareRenderer>(Lifestyle.Singleton);
+            container.Register<IRenderer, ManagedRenderer>(Lifestyle.Singleton);
 
             // Register main components
             container.RegisterSingleton<InputProcessor>();
@@ -105,7 +122,7 @@ namespace RetroLite
             container.RegisterSingleton<EventBus>();
             container.RegisterSingleton<Config>();
             container.RegisterSingleton<RetroCoreFactory>();
-            
+
             // Register Scenes
             container.Collection.Register<IScene>(Assembly.GetExecutingAssembly());
 
@@ -116,8 +133,8 @@ namespace RetroLite
 
             return container;
         }
-        
-        private static unsafe void InitializeLogger()
+
+        private static void InitializeLogger()
         {
             var loggingConfiguration = new LoggingConfiguration();
             var consoleTarget = new ColoredConsoleTarget();

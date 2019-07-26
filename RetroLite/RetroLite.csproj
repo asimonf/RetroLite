@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RetroLite</RootNamespace>
     <AssemblyName>RetroLite</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <LangVersion>7.2</LangVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -38,25 +38,30 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Chromely.Unofficial.CefGlue.NetStd, Version=66.0.3359.117, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Chromely.Unofficial.CefGlue.NetStd.66.0.3359.117\lib\netstandard2.0\Chromely.Unofficial.CefGlue.NetStd.dll</HintPath>
+    <Reference Include="Chromely.Unofficial.CefGlue.NetStd, Version=70.0.3538.102, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Chromely.Unofficial.CefGlue.NetStd.70.0.3538.102\lib\netstandard2.0\Chromely.Unofficial.CefGlue.NetStd.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="LiteDB, Version=4.1.4.0, Culture=neutral, PublicKeyToken=4ee40123013c9f27">
       <HintPath>..\packages\LiteDB.4.1.4\lib\net40\LiteDB.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
-      <HintPath>..\packages\NLog.4.5.6\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.6.6\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Redbus, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\Redbus.1.0.4\lib\net45\Redbus.dll</HintPath>
+    <Reference Include="Redbus, Version=1.0.7.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\Redbus.1.0.7\lib\net45\Redbus.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="rubberband-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\rubberband-sharp.1.0.0\lib\netstandard2.0\rubberband-sharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="SimpleInjector, Version=4.3.0.0, Culture=neutral, PublicKeyToken=984cb50dea722e99">
@@ -128,15 +133,22 @@
     <Compile Include="Scene\RetroCoreManager.cs" />
     <Compile Include="Scene\SceneManager.cs" />
     <Compile Include="Video\IRenderer.cs" />
+    <Compile Include="Video\ManagedRenderer.cs" />
     <Compile Include="Video\SoftwareRenderer.cs" />
     <Compile Include="Video\SurfaceRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="rubberband-dll-Win32.dll" />
+    <None Include="rubberband-dll-x64.dll" />
     <None Include="xt-cli.dll.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\LibArvid\LibArvid.csproj">
+      <Project>{ceaf086d-59fb-418d-b1da-6850aa90ee7c}</Project>
+      <Name>LibArvid</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LibRetro\LibRetro.csproj">
       <Project>{2f599f95-e5d5-4b79-9d29-86c32fd678c8}</Project>
       <Name>LibRetro</Name>
@@ -170,6 +182,8 @@
       <CefWindows Include="..\dependencies\windows\cef\binaries\**\*.*" />
       <SdlUnix Include="..\dependencies\unix\sdl\*.*" />
       <SdlWindows Include="..\dependencies\windows\sdl\*.*" />
+      <ArvidLinux Include="..\dependencies\unix\arvid\*.*" />
+      <ArvidWindows Include="..\dependencies\windows\arvid\*.*" />
       <Assets Include=".\assets\**\*.*" />
       <Cores Include=".\cores\**\*.*" />
       <Roms Include=".\roms\**\*.*" />
@@ -177,11 +191,20 @@
     </ItemGroup>
     <Copy Condition="'$(OS)' == 'Unix'" SourceFiles="@(CefUnix)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(OS)' == 'Unix'" SourceFiles="@(SdlUnix)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(OS)' == 'Unix'" SourceFiles="@(ArvidLinux)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(CefWindows)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(SdlWindows)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(OS)' == 'Windows_NT'" SourceFiles="@(ArvidWindows)" DestinationFolder="$(OutputPath)/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(Assets)" DestinationFolder="$(OutputPath)/assets/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(Cores)" DestinationFolder="$(OutputPath)/cores/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(Roms)" DestinationFolder="$(OutputPath)/roms/%(RecursiveDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(System)" DestinationFolder="$(OutputPath)/system/%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Import Project="..\packages\rubberband-sharp.1.0.0\build\rubberband-sharp.targets" Condition="Exists('..\packages\rubberband-sharp.1.0.0\build\rubberband-sharp.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\rubberband-sharp.1.0.0\build\rubberband-sharp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\rubberband-sharp.1.0.0\build\rubberband-sharp.targets'))" />
   </Target>
 </Project>

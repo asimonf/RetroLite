@@ -55,9 +55,9 @@ namespace RetroLite.Scene
             var xtService = XtAudio.GetServiceBySetup(XtSetup.SystemAudio);
             var audioFormat = new XtFormat(new XtMix(_config.SampleRate, XtSample.Float32), 0, 0, 2, 0);
             _xtDevice = xtService.OpenDefaultDevice(true);
-            _xtStream = _xtDevice.OpenStream(audioFormat, true, true, 16, RenderAudioCallback, XRunCallback, null);
+            var xtBuffer = _xtDevice.GetBuffer(audioFormat);
+            _xtStream = _xtDevice.OpenStream(audioFormat, true, true, xtBuffer.current, RenderAudioCallback, XRunCallback, null);
             _xtStream.Start();
-            
         }
 
         public void Dispose()
@@ -93,35 +93,35 @@ namespace RetroLite.Scene
 
         public void RunLoop()
         {
-            var frameStart = Stopwatch.GetTimestamp();
+//            var frameStart = Stopwatch.GetTimestamp();
             HandleEvents();
             Update();
             Draw();
-            var frameTicks = Stopwatch.GetTimestamp() - frameStart;
-            var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
-            var targetFrametime = (1000.0 / _config.TargetFps);
-            
-            if (!(targetFrametime > elapsedTime)) return;
-
-            var sleepTime = (int) (targetFrametime - elapsedTime) - 1;
-
-            if (sleepTime > 0)
-            {
-                // Experimental to reduce CPU usage. Hoping that Sleep is actually accurate to the millisecond
-                Thread.Sleep(sleepTime);
-                var remainder = (targetFrametime - elapsedTime) - sleepTime;
-                var durationTicks = remainder * (Stopwatch.Frequency / 1000.0);
-                // Busy loop. This is to increase accuracy
-                _nopTimer.Restart();
-                while (_nopTimer.ElapsedTicks < durationTicks) ;
-            }
-            else
-            {
-                var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
-                // Busy loop. This is to increase accuracy
-                _nopTimer.Restart();
-                while (_nopTimer.ElapsedTicks < durationTicks) ;
-            }
+//            var frameTicks = Stopwatch.GetTimestamp() - frameStart;
+//            var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
+//            var targetFrametime = (1000.0 / _config.TargetFps);
+//            
+//            if (!(targetFrametime > elapsedTime)) return;
+//
+//            var sleepTime = (int) (targetFrametime - elapsedTime) - 1;
+//
+//            if (sleepTime > 0)
+//            {
+//                // Experimental to reduce CPU usage. Hoping that Sleep is actually accurate to the millisecond
+//                Thread.Sleep(sleepTime);
+//                var remainder = (targetFrametime - elapsedTime) - sleepTime;
+//                var durationTicks = remainder * (Stopwatch.Frequency / 1000.0);
+//                // Busy loop. This is to increase accuracy
+//                _nopTimer.Restart();
+//                while (_nopTimer.ElapsedTicks < durationTicks) ;
+//            }
+//            else
+//            {
+//                var durationTicks = (targetFrametime - elapsedTime) * (Stopwatch.Frequency / 1000.0);
+//                // Busy loop. This is to increase accuracy
+//                _nopTimer.Restart();
+//                while (_nopTimer.ElapsedTicks < durationTicks) ;
+//            }
         }
 
         private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,

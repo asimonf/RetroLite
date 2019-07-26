@@ -13,7 +13,6 @@ export interface Game {
   providedIn: 'root'
 })
 export class RetroLiteApiService {
-
   private url = 'http://api.retrolite.internal/';
 
   private _gamesList: Game[] = [];
@@ -76,6 +75,13 @@ export class RetroLiteApiService {
 
   refreshGameList() {
     return this.http.get<Game[]>(this.url + 'games').toPromise().then((games: Game[]) => {
+      this._gamesList = games;
+      this._games$.next(this._gamesList);
+    });
+  }
+
+  scanGameList() {
+    return this.http.post(this.url + 'games/scan', {}).toPromise().then((games: Game[]) => {
       this._gamesList = games;
       this._games$.next(this._gamesList);
     });

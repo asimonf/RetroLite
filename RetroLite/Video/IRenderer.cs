@@ -3,10 +3,17 @@ using SDL2;
 
 namespace RetroLite.Video
 {
+    public delegate void OnVideoSetHandler(int newWidth, int newHeight, float newRefreshRate, IRenderer self);
+    
     public interface IRenderer : IDisposable
     {
         int Width { get; }
         int Height { get; }
+        float RefreshRate { get; }
+
+        event OnVideoSetHandler OnVideoSet;
+        
+        object Sync { get; }
 
         IntPtr LoadTextureFromFile(string path);
         IntPtr CreateTexture(uint format, SDL.SDL_TextureAccess access, int width, int height);
@@ -40,5 +47,7 @@ namespace RetroLite.Video
         void Screenshot();
 
         void SetTitleText(string title);
+
+        void SetMode(int width, int height, float refreshRate);
     }
 }

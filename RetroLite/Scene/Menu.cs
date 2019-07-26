@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LibArvid;
 using Redbus;
 using RetroLite.Event;
 using RetroLite.Input;
@@ -39,9 +40,9 @@ namespace RetroLite.Scene
             _analogs = (GameControllerAnalog[])Enum.GetValues(typeof(GameControllerAnalog));
             _eventTokenList = new List<SubscriptionToken>();
             _eventBus = eventBus;
-
+            
 #if(DEBUG)            
-            var logSeverity = CefLogSeverity.Debug;
+            var logSeverity = CefLogSeverity.Warning;
 #else
             var logSeverity = CefLogSeverity.Error;
 #endif

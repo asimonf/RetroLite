@@ -10,20 +10,27 @@ namespace RetroLite.Video
 
         public int Height { get; }
         public int Width { get; }
+        public float RefreshRate { get;  }
+        
+        public event OnVideoSetHandler OnVideoSet;
+        
+        public object Sync { get; }
 
-        public SoftwareRenderer()
+        public SoftwareRenderer(int width, int height, float refreshRate)
         {
-            Width = 800;
-            Height = 600;
-            
             _sdlWindow = SDL.SDL_CreateWindow(
                 "RetroLite", 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
                 SDL.SDL_WINDOWPOS_UNDEFINED, 
-                Width, 
-                Height, 
+                width, 
+                height, 
                 SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS
             );
+
+            Width = width;
+            Height = height;
+            RefreshRate = refreshRate;
+            Sync = new object();
             
             if (_sdlWindow == null)
             {
@@ -137,6 +144,11 @@ namespace RetroLite.Video
         public void SetTitleText(string title)
         {
             SDL.SDL_SetWindowTitle(_sdlWindow, title);
+        }
+
+        public void SetMode(int width, int height, float refreshRate)
+        {
+            
         }
     }
 }

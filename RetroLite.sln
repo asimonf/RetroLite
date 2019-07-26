@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibRetro", "LibRetro\LibRet
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SDL2-CS", "SDL2-CS\SDL2-CS.csproj", "{85480198-8711-4355-830E-72FD794AD3F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibArvid", "LibArvid\LibArvid.csproj", "{CEAF086D-59FB-418D-B1DA-6850AA90EE7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,6 +35,10 @@ Global
 		{85480198-8711-4355-830E-72FD794AD3F6}.Debug|x64.Build.0 = Debug|x64
 		{85480198-8711-4355-830E-72FD794AD3F6}.Release|x64.ActiveCfg = Release|x64
 		{85480198-8711-4355-830E-72FD794AD3F6}.Release|x64.Build.0 = Release|x64
+		{CEAF086D-59FB-418D-B1DA-6850AA90EE7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CEAF086D-59FB-418D-B1DA-6850AA90EE7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{CEAF086D-59FB-418D-B1DA-6850AA90EE7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{CEAF086D-59FB-418D-B1DA-6850AA90EE7C}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

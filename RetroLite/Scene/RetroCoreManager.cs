@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using NLog;
-using NLog.Targets;
 using Redbus;
 using RetroLite.DB;
 using RetroLite.Event;
-using RetroLite.Input;
-using RetroLite.Scene;
 using RetroLite.Video;
 
 namespace RetroLite.Scene
@@ -22,11 +16,14 @@ namespace RetroLite.Scene
         private readonly List<SubscriptionToken> _eventTokens;
         private readonly StateManager _stateManager;
         private readonly EventBus _eventBus;
-        private bool _running = false;
+        private bool _running;
 
         public int Order => 0;
 
-        public RetroCoreManager(StateManager stateManager, EventBus eventBus)
+        public RetroCoreManager(
+            StateManager stateManager, 
+            EventBus eventBus
+        )
         {
             _eventTokens = new List<SubscriptionToken>();
             _stateManager = stateManager;

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LiteDB;
 using NLog;
+using NLog.Targets;
 using RetroLite.DB.Entity;
 using RetroLite.Event;
 using RetroLite.Input;
@@ -40,11 +41,15 @@ namespace RetroLite.DB
         {
             var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "roms"));
 
+            Logger.Debug("Found paths {systems}", systems);
+
             var systemCollection = _db.Database.GetCollection<Entity.System>();
 
             Parallel.ForEach(systems, (systemPath) =>
             {
                 var systemName = Path.GetFileNameWithoutExtension(systemPath);
+                
+                Console.WriteLine("System " + systemPath);
 
                 var system = systemCollection.FindById(systemName);
 

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using LibArvid;
+using NLog.Targets;
 using SDL2;
 
 namespace RetroLite.Video
@@ -10,13 +13,26 @@ namespace RetroLite.Video
 
         public int Height { get; }
         public int Width { get; }
+        public float RefreshRate { get; }
+        
+        public event OnVideoSetHandler OnVideoSet;
+        
+        public object Sync { get; }
 
-        public SurfaceRenderer(int width, int height)
+        public SurfaceRenderer(int width, int height, float refreshRate)
         {
             Width = width;
             Height = height;
-            
-            _sdlSurface = SDL.SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
+            RefreshRate = SetArvidMode(width, height, refreshRate);
+            Sync = new object();
+
+                _sdlSurface = SDL.SDL_CreateRGBSurfaceWithFormat(
+                0, 
+                Width, 
+                Height, 
+                16, 
+                SDL.SDL_PIXELFORMAT_RGB555
+            );
 
             if (_sdlSurface == null)
             {
@@ -29,6 +45,48 @@ namespace RetroLite.Video
             {
                 throw new Exception("SDL Renderer Initialization Error");
             }
+        }
+
+        private unsafe float SetArvidMode(int width, int height, float refreshRate)
+        {
+            if (ArvidClient.IsConnected)
+            {
+                var vmodeInfos = new ArvidClient.ArvidClientVmodeInfo[20];
+
+                fixed (ArvidClient.ArvidClientVmodeInfo* vmodesInfosPtr = vmodeInfos)
+                {
+                    var count = ArvidClient.arvid_client_enum_video_modes(vmodesInfosPtr, 20);
+                    
+                    Console.WriteLine(count);
+
+                    for (var i = 0; i < count; i++)
+                    {
+                        if (vmodesInfosPtr[i].width != (ushort) width) continue;
+
+                        var mode = (ArvidClient.VideoModeInt) vmodesInfosPtr[i].vmode;
+
+                        var lines = ArvidClient.arvid_client_get_video_mode_lines(mode, refreshRate);
+                        
+                        if (lines < 0) throw new Exception("Could not find a mode that satisfies the selected refresh rate");
+
+                        var res = ArvidClient.arvid_client_set_video_mode(mode, lines);
+                        
+                        if (res < 0) throw new Exception("Unable to set Arvid Mode");
+
+                        res = ArvidClient.arvid_client_set_blit_type(ArvidClient.BlitType.Blocking);
+                        
+                        if (res < 0) throw new Exception("Unable to set Arvid Blit Type");
+
+                        var finalRefreshRate = ArvidClient.arvid_client_get_video_mode_refresh_rate(mode, lines);
+                        
+                        if (finalRefreshRate < 0) throw new Exception("Unable to get final refresh rate");
+
+                        return finalRefreshRate;
+                    }
+                }
+            }
+
+            throw new Exception("Not connected to Arvid");
         }
 
         public void Dispose()
@@ -105,6 +163,32 @@ namespace RetroLite.Video
         public void RenderPresent()
         {
             SDL.SDL_RenderPresent(_sdlRenderer);
+
+            try
+            {
+                SDL.SDL_LockSurface(_sdlSurface);
+
+                unsafe
+                {
+                    var surface = (SDL.SDL_Surface*)_sdlSurface.ToPointer();
+                    ArvidClient.arvid_client_wait_for_vsync();
+                    var res = ArvidClient.arvid_client_blit_buffer(
+                        (ushort*)surface->pixels,
+                        surface->w,
+                        surface->h,
+                        surface->pitch / 2
+                    );
+
+                    if (res != 0)
+                    {
+                        throw new Exception("Error blitting to arvid");
+                    }
+                }
+            }
+            finally
+            {
+                SDL.SDL_UnlockSurface(_sdlSurface);
+            }                
         }
 
         public void Screenshot()
@@ -122,6 +206,11 @@ namespace RetroLite.Video
         }
 
         public void SetTitleText(string title)
+        {
+            
+        }
+
+        public void SetMode(int width, int height, float refreshRate)
         {
             
         }
