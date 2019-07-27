@@ -172,7 +172,7 @@ namespace RetroLite.RetroCore
             _renderer.SetMode(
                 (int)_currentSystemAvInfo.Geometry.MaxWidth,
                 (int)_currentSystemAvInfo.Geometry.BaseHeight,
-                (float)56
+                (float)_currentSystemAvInfo.Timing.Fps
             );
             _config.TargetFps = _currentSystemAvInfo.Timing.Fps;
             

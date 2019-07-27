@@ -7,6 +7,7 @@ using System.Threading;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Video;
+using SRC_CS;
 using Xt;
 
 namespace RetroLite.Scene
@@ -34,7 +35,7 @@ namespace RetroLite.Scene
             InputProcessor inputProcessor, 
             EventProcessor eventProcessor, 
             IEnumerable<IScene> scenes,
-            Config config
+            Config config<
         )
         {
             _renderer = renderer;
@@ -52,9 +53,21 @@ namespace RetroLite.Scene
             // Audio Related Stuff
             _tmpAudioBuffer = new float[8192];
             _xtAudio = new XtAudio(null, IntPtr.Zero, _traceCallback, _fatalCallback);
-            var xtService = XtAudio.GetServiceBySetup(XtSetup.SystemAudio);
-            var audioFormat = new XtFormat(new XtMix(_config.SampleRate, XtSample.Float32), 0, 0, 2, 0);
-            _xtDevice = xtService.OpenDefaultDevice(true);
+            var xtService = XtAudio.GetServiceBySystem(XtSystem.Wasapi);
+//            Console.WriteLine("  Capabilities: " + XtPrint.CapabilitiesToString(xtService.GetCapabilities()));
+//            for (int d = 0; d < xtService.GetDeviceCount(); d++)
+//                using (XtDevice device = xtService.OpenDevice(d)) {
+//
+//                    Console.WriteLine("  Device " + device.GetName() + ":");
+//                    Console.WriteLine("    System: " + device.GetSystem());
+//                    Console.WriteLine("    Current mix: " + device.GetMix());
+//                    Console.WriteLine("    Input channels: " + device.GetChannelCount(false));
+//                    Console.WriteLine("    Output channels: " + device.GetChannelCount(true));
+//                    Console.WriteLine("    Interleaved access: " + device.SupportsAccess(true));
+//                    Console.WriteLine("    Non-interleaved access: " + device.SupportsAccess(false));
+//                }
+            _xtDevice = xtService.OpenDevice(9);
+            var audioFormat = new XtFormat(new XtMix(_config.SampleRate, XtSample.Int16), 0, 0, 2, 0);
             var xtBuffer = _xtDevice.GetBuffer(audioFormat);
             _xtStream = _xtDevice.OpenStream(audioFormat, true, true, xtBuffer.current, RenderAudioCallback, XRunCallback, null);
             _xtStream.Start();
@@ -124,7 +137,7 @@ namespace RetroLite.Scene
 //            }
         }
 
-        private void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,
+        private unsafe void RenderAudioCallback(XtStream stream, object input, object output, int frames, double time,
             ulong position, bool timeValid, ulong error, object user)
         {
             var sampleCount = frames * 2; // 2 channels per frame, interleaved
@@ -166,7 +179,11 @@ namespace RetroLite.Scene
                 }
             }
             
-            Marshal.Copy(_tmpAudioBuffer, 0, (IntPtr)output, sampleCount);
+            fixed (float* dataPtr = &_tmpAudioBuffer[0])
+            {
+                SampleRate.src_float_to_short_array(dataPtr, (short*)((IntPtr)output).ToPointer(),
+                    sampleCount);
+            }
         }
         
         private void XRunCallback(int index, object user)
