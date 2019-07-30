@@ -11,7 +11,7 @@ namespace RetroLite.Video
         private readonly IntPtr _sdlSurface;
         private readonly IntPtr _sdlRenderer;
 
-        public int Height { get; }
+        public int Height { get; set; }
         public int Width { get; }
         public float RefreshRate { get; }
         
@@ -155,9 +155,16 @@ namespace RetroLite.Video
             SDL.SDL_RenderCopy(_sdlRenderer, texture, ref src, IntPtr.Zero);
         }
 
-        public void RenderCopy(IntPtr texture)
+        public void RenderCopy(IntPtr texturePtr)
         {
-            SDL.SDL_RenderCopy(_sdlRenderer, texture, IntPtr.Zero, IntPtr.Zero);
+            var destRect = new SDL.SDL_Rect()
+            {
+                h = Height,
+                w = Width,
+                x = 0,
+                y = 0
+            };
+            SDL.SDL_RenderCopy(_sdlRenderer, texturePtr, IntPtr.Zero, ref destRect);
         }
 
         public void RenderPresent()
@@ -174,8 +181,8 @@ namespace RetroLite.Video
                     ArvidClient.arvid_client_wait_for_vsync();
                     var res = ArvidClient.arvid_client_blit_buffer(
                         (ushort*)surface->pixels,
-                        surface->w,
-                        surface->h,
+                        Width,
+                        Height,
                         surface->pitch / 2
                     );
 
@@ -213,6 +220,11 @@ namespace RetroLite.Video
         public void SetMode(int width, int height, float refreshRate)
         {
             
+        }
+
+        public void SetInterlacing(bool interlacing)
+        {
+            ArvidClient.arvid_client_set_interlacing((short)(interlacing ? 1 : 0));
         }
     }
 }

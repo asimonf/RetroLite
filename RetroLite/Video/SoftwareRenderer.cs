@@ -8,7 +8,7 @@ namespace RetroLite.Video
         private readonly IntPtr _sdlWindow;
         private readonly IntPtr _sdlRenderer;
 
-        public int Height { get; }
+        public int Height { get; set; }
         public int Width { get; }
         public float RefreshRate { get;  }
         
@@ -147,6 +147,11 @@ namespace RetroLite.Video
         }
 
         public void SetMode(int width, int height, float refreshRate)
+        {
+            
+        }
+
+        public void SetInterlacing(bool interlacing)
         {
             
         }

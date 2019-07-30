@@ -206,6 +206,14 @@ namespace LibArvid
         /// <returns></returns>
         [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern int arvid_client_set_line_pos_mod(short mod);
+        
+        /// <summary>
+        /// set interlacing mode
+        /// </summary>
+        /// <param name="enabled"></param>
+        /// <returns></returns>
+        [DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int arvid_client_set_interlacing(short enabled);
 
         /// <summary>
         /// get the line position modifier

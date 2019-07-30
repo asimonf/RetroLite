@@ -25,13 +25,13 @@ export class MenuComponent implements OnInit, AfterViewInit {
 
   constructor(private retroApi: RetroLiteApiService) {
     this.menu = new Menu(retroApi);
-    retroApi.getGames$().subscribe((val) => {
-      this.lastGameList = val;
-    });
   }
 
   ngOnInit() {
-
+    this.retroApi.refreshGameList();
+    this.retroApi.getGames$().subscribe((val) => {
+      this.lastGameList = val;
+    });
   }
 
   @HostBinding('@state') get menuState() {

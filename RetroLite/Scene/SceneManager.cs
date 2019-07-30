@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Redbus;
+using RetroLite.DB;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Video;
@@ -35,7 +37,9 @@ namespace RetroLite.Scene
             InputProcessor inputProcessor, 
             EventProcessor eventProcessor, 
             IEnumerable<IScene> scenes,
-            Config config<
+            Config config,
+            StateManager stateManager, 
+            EventBus eventBus
         )
         {
             _renderer = renderer;
@@ -66,11 +70,17 @@ namespace RetroLite.Scene
 //                    Console.WriteLine("    Interleaved access: " + device.SupportsAccess(true));
 //                    Console.WriteLine("    Non-interleaved access: " + device.SupportsAccess(false));
 //                }
-            _xtDevice = xtService.OpenDevice(9);
+//            _xtDevice = xtService.OpenDevice(9);
+            _xtDevice = xtService.OpenDefaultDevice(true);
             var audioFormat = new XtFormat(new XtMix(_config.SampleRate, XtSample.Int16), 0, 0, 2, 0);
             var xtBuffer = _xtDevice.GetBuffer(audioFormat);
             _xtStream = _xtDevice.OpenStream(audioFormat, true, true, xtBuffer.current, RenderAudioCallback, XRunCallback, null);
             _xtStream.Start();
+            
+            stateManager.Initialize();
+            stateManager.ScanForGames();
+            var game = stateManager.GetGameById("240pTestSuitePS1");
+            eventBus.Publish(new LoadGameEvent(game));
         }
 
         public void Dispose()
@@ -163,21 +173,21 @@ namespace RetroLite.Scene
                 Array.Copy(firstSceneFrames, _tmpAudioBuffer, sampleCount);
             }
 
-            for (var i = 1; i < _scenes.Length; i++)
-            {
-                var sceneFrames = _scenes[i].GetAudioData(frames);
-
-                if (null == sceneFrames) continue;
-
-                // Actual mixing. TODO: Optimize using SIMD intrinsics
-                for (var j = 0; j < sampleCount; j++)
-                {
-                    var a = sceneFrames[j];
-                    var b = _tmpAudioBuffer[j];
-
-                    _tmpAudioBuffer[j] = a + b - a * b;
-                }
-            }
+//            for (var i = 1; i < _scenes.Length; i++)
+//            {
+//                var sceneFrames = _scenes[i].GetAudioData(frames);
+//
+//                if (null == sceneFrames) continue;
+//
+//                // Actual mixing. TODO: Optimize using SIMD intrinsics
+//                for (var j = 0; j < sampleCount; j++)
+//                {
+//                    var a = sceneFrames[j];
+//                    var b = _tmpAudioBuffer[j];
+//
+//                    _tmpAudioBuffer[j] = a + b - a * b;
+//                }
+//            }
             
             fixed (float* dataPtr = &_tmpAudioBuffer[0])
             {

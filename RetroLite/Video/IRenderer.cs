@@ -8,7 +8,7 @@ namespace RetroLite.Video
     public interface IRenderer : IDisposable
     {
         int Width { get; }
-        int Height { get; }
+        int Height { get; set; }
         float RefreshRate { get; }
 
         event OnVideoSetHandler OnVideoSet;
@@ -49,5 +49,7 @@ namespace RetroLite.Video
         void SetTitleText(string title);
 
         void SetMode(int width, int height, float refreshRate);
+
+        void SetInterlacing(bool interlacing);
     }
 }

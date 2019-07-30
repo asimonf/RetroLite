@@ -124,8 +124,13 @@ namespace RetroLite
             container.RegisterSingleton<RetroCoreFactory>();
 
             // Register Scenes
-            container.Collection.Register<IScene>(Assembly.GetExecutingAssembly());
+//            container.Collection.Register<IScene>(Assembly.GetExecutingAssembly());
 
+//            container.RegisterSingleton<RetroCoreManager>();
+            
+            container.Collection.Register<IScene>(typeof(RetroCoreManager));
+
+            
             // Register API components
             container.RegisterSingleton<ApiRouter>();
             container.Register<CefRequestHandler, ApiRequestHandler>(Lifestyle.Singleton);

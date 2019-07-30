@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using LibArvid;
 using Redbus;
+using RetroLite.DB;
 using RetroLite.Event;
 using RetroLite.Input;
 using RetroLite.Menu;
@@ -32,6 +33,7 @@ namespace RetroLite.Scene
             CefMainArgs mainArgs,
             InputProcessor inputProcessor,
             MenuBrowserClient browserClient,
+            StateManager stateManager,
             EventBus eventBus
         )
         {
@@ -42,7 +44,7 @@ namespace RetroLite.Scene
             _eventBus = eventBus;
             
 #if(DEBUG)            
-            var logSeverity = CefLogSeverity.Warning;
+            var logSeverity = CefLogSeverity.Error;
 #else
             var logSeverity = CefLogSeverity.Error;
 #endif
@@ -76,6 +78,9 @@ namespace RetroLite.Scene
 
             _eventTokenList.Add(_eventBus.Subscribe<OpenMenuEvent>(OnOpenMenuEvent));
             _eventTokenList.Add(_eventBus.Subscribe<CloseMenuEvent>(OnCloseMenuEvent));
+
+            var game = stateManager.GetGameById("Super Mario World (USA)");
+            eventBus.Publish(new LoadGameEvent(game));
         }
 
         ~Menu()

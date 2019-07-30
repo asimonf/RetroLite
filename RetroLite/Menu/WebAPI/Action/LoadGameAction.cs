@@ -33,7 +33,7 @@ namespace RetroLite.Menu.WebAPI.Action
         {
             var gameId = parameters["id"];
 
-            var game = _stateManager.GetGameById(new Guid(gameId));
+            var game = _stateManager.GetGameById(gameId);
             
             if (null == game)
             {

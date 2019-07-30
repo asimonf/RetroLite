@@ -25,6 +25,8 @@ namespace RetroLite.DB
         private readonly Dictionary<string, Dictionary<string, RetroCore.RetroCore>> _retroCoresBySystem;
         private readonly RetroCoreFactory _coreFactory;
 
+        private bool _initialized = false;
+
         public StateManager(RetroCoreFactory coreFactory)
         {
             _db = new LiteRepository(Path.Combine(Environment.CurrentDirectory, "retrolite.db"));
@@ -73,7 +75,7 @@ namespace RetroLite.DB
 
                     _db.Upsert(new Game()
                     {
-                        Id = new Guid(),
+                        Id = Path.GetFileNameWithoutExtension(gameFile),
                         Name = Path.GetFileNameWithoutExtension(gameFile),
                         Path = gameFile,
                         System = systemName
@@ -84,6 +86,10 @@ namespace RetroLite.DB
 
         public void Initialize()
         {
+            if (_initialized) return;
+
+            _initialized = true;
+            
             var systems = Directory.GetDirectories(Path.Combine(Environment.CurrentDirectory, "cores"));
                 
             foreach (var systemPath in systems)
@@ -159,7 +165,7 @@ namespace RetroLite.DB
                 .ToList();
         }
 
-        public Game GetGameById(Guid id)
+        public Game GetGameById(string id)
         {
             return _db.Query<Game>()
                 .Where(x => x.Id == id)

@@ -98,6 +98,9 @@ namespace LibRetro
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public delegate bool RetroLoadGame(ref RetroGameInfo game);
+    
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    public delegate bool RetroLoadGameRaw(IntPtr game);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate bool RetroLoadGameSpecial(uint gameType, ref RetroGameInfo game, ulong numInfo);
@@ -153,6 +156,7 @@ namespace LibRetro
         public readonly RetroCheatSet RetroCheatSet;
 
         public readonly RetroLoadGame RetroLoadGame;
+        public readonly RetroLoadGameRaw RetroLoadGameRaw;
         public readonly RetroLoadGameSpecial RetroLoadGameSpecial;
 
         public readonly RetroUnloadGame RetroUnloadGame;
@@ -216,6 +220,7 @@ namespace LibRetro
             RetroCheatSet = LoadFunction<RetroCheatSet>("retro_cheat_set");
 
             RetroLoadGame = LoadFunction<RetroLoadGame>("retro_load_game");
+            RetroLoadGameRaw = LoadFunction<RetroLoadGameRaw>("retro_load_game");
             RetroLoadGameSpecial = LoadFunction<RetroLoadGameSpecial>("retro_load_game_special");
 
             RetroUnloadGame = LoadFunction<RetroUnloadGame>("retro_unload_game");

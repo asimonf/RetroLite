@@ -36,11 +36,14 @@ namespace RetroLite.RetroCore
 
         #region Video Related Fields
 
-        private RetroPixelFormat _pixelFormat;
+        private RetroPixelFormat _pixelFormat = RetroPixelFormat.F_0RGB1555;
         private RetroSystemAvInfo _currentSystemAvInfo;
         private IntPtr _framebuffer;
+        private IntPtr _frameField;
         private int _framebufferWidth, _framebufferHeight;
         private bool _videoContextUpdated;
+        private bool _interlacing = false;
+        private bool _isOddField = false;
         
         #endregion
 
@@ -80,7 +83,7 @@ namespace RetroLite.RetroCore
             _delegateDictionary = new Dictionary<Delegate, GCHandle>();
             _inputDescriptors = new List<InputDescriptor>();
             _coreVariables = new Dictionary<string, CoreVariable>();
-
+            
             RetroLogCallbackWrapper logCallback = _retroLogCallback;
             _delegateDictionary.Add(logCallback, GCHandle.Alloc(logCallback));
 
@@ -139,6 +142,8 @@ namespace RetroLite.RetroCore
 
             _core.RetroGetSystemInfo(out var systemInfo);
             var gameInfo = new RetroGameInfo();
+            bool loaded;
+            
             if (systemInfo.NeedFullpath)
             {
                 var pathPtr = Marshal.StringToHGlobalAnsi(path);
@@ -147,7 +152,7 @@ namespace RetroLite.RetroCore
                 gameInfo.Path = pathPtr;
                 gameInfo.Data = IntPtr.Zero;
                 gameInfo.size = 0;
-                _core.RetroLoadGame(ref gameInfo);
+                loaded = _core.RetroLoadGame(ref gameInfo);
             }
             else
             {
@@ -162,15 +167,25 @@ namespace RetroLite.RetroCore
                         gameInfo.Path = pathPtr;
                         gameInfo.Data = new IntPtr(dataPtr);
                         gameInfo.size = (uint) data.Length;
-                        _core.RetroLoadGame(ref gameInfo);
+                        loaded = _core.RetroLoadGame(ref gameInfo);
                     }                    
                 }
             }
 
+            if (!loaded)
+            {
+                Logger.Error("Could not load the game");
+                return;
+            }
+            else
+            {
+                Logger.Debug("Game succesfully loaded");
+            }
+            
             GameLoaded = true;
             _core.RetroGetSystemAvInfo(out _currentSystemAvInfo);
             _renderer.SetMode(
-                (int)_currentSystemAvInfo.Geometry.MaxWidth,
+                (int)512,
                 (int)_currentSystemAvInfo.Geometry.BaseHeight,
                 (float)_currentSystemAvInfo.Timing.Fps
             );
@@ -428,16 +443,41 @@ namespace RetroLite.RetroCore
             }
         }
 
-        public void Draw()
+        public unsafe void Draw()
         {
             if (GameLoaded && _framebuffer != IntPtr.Zero)
             {
-                _renderer.RenderCopy(_framebuffer);
-
-                if (_audioBuffer.Glitches > 0)
+                if (!_interlacing)
                 {
-                    // TODO: Do something with this info, maybe log it? maybe paint a pixel?
-                    _audioBuffer.Glitches = 0;
+                    _renderer.RenderCopy(_framebuffer);                    
+                }
+                else
+                {
+                    try
+                    {
+                        _renderer.LockTexture(_framebuffer, out var framebufferPixels, out var framebufferPitch);
+                        _renderer.LockTexture(_frameField, out var frameFieldPixels, out var frameFieldPitch);
+
+                        for (var i = 0; i < _renderer.Height; i++)
+                        {
+                            var originScanline = !_isOddField ? i * 2 : i * 2 + 1;
+                        
+                            Buffer.MemoryCopy(
+                                (byte*)framebufferPixels.ToPointer() + originScanline * framebufferPitch, 
+                                (byte*)frameFieldPixels.ToPointer() + i * frameFieldPitch, 
+                                frameFieldPitch, 
+                                framebufferPitch
+                            );
+                        }                            
+                    }
+                    finally
+                    {
+                        _renderer.UnlockTexture(_framebuffer);
+                        _renderer.UnlockTexture(_frameField);
+                    }
+
+                    _isOddField = !_isOddField;
+                    _renderer.RenderCopy(_frameField);
                 }
             }
         }
@@ -568,9 +608,11 @@ namespace RetroLite.RetroCore
 
         private void _recreateFramebuffer()
         {
-            if (_framebuffer != IntPtr.Zero)
+            if (_framebuffer != IntPtr.Zero) _renderer.FreeTexture(_framebuffer);
+            if (_frameField != IntPtr.Zero)
             {
-                _renderer.FreeTexture(_framebuffer);
+                _renderer.FreeTexture(_frameField);
+                _frameField = IntPtr.Zero;
             }
 
             var format = SDL.SDL_PIXELFORMAT_RGB888;
@@ -591,7 +633,36 @@ namespace RetroLite.RetroCore
                 _framebufferWidth,
                 _framebufferHeight
             );
+
+            _isOddField = false;
             
+            if (_framebufferHeight > 300)
+            {
+                _interlacing = true;
+                _renderer.Height = _framebufferHeight / 2;
+                
+                _frameField = _renderer.CreateTexture(
+                    format,
+                    SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
+                    _framebufferWidth,
+                    _renderer.Height
+                );
+            }
+            else
+            {
+                _interlacing = false;
+                _renderer.Height = _framebufferHeight;
+            }
+            
+            Logger.Info(
+                "New FB Size: {0}x{1} mode: {2}", 
+                _framebufferWidth, 
+                _framebufferHeight,
+                !_interlacing ? "Progressive" : "Interlaced"
+            );
+            
+            _renderer.SetInterlacing(_interlacing);
+
             _renderer.SetTextureBlendMode(_framebuffer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
         #endregion

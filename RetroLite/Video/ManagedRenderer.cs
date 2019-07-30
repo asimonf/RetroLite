@@ -13,7 +13,19 @@ namespace RetroLite.Video
         
         
         public int Width => _surfaceRenderer?.Width ?? 0;
-        public int Height => _surfaceRenderer?.Height ?? 0;
+
+        public int Height
+        {
+            get => _surfaceRenderer?.Height ?? 0;
+            set
+            {
+                if (_surfaceRenderer != null)
+                {
+                    _surfaceRenderer.Height = value;
+                }
+            }
+        }
+
         public float RefreshRate => _surfaceRenderer?.RefreshRate ?? 0f;
         
         public event OnVideoSetHandler OnVideoSet;
@@ -151,6 +163,11 @@ namespace RetroLite.Video
 
                 _surfaceRenderer = newRenderer;
             }
+        }
+        
+        public void SetInterlacing(bool interlacing)
+        {
+            _surfaceRenderer.SetInterlacing(interlacing);
         }
     }
 }

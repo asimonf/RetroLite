@@ -103,7 +103,7 @@ namespace RetroLite.RetroCore
 
         private bool _getOverscan(bool* useOverscan)
         {
-            *useOverscan = true;
+            *useOverscan = false;
 
             return true;
         }
@@ -117,7 +117,7 @@ namespace RetroLite.RetroCore
 
         private bool _setMessage(RetroMessage* message)
         {
-            RetroCore.Logger.Info("Message: " + message->Message);
+            RetroCore.Logger.Debug("Message: " + message->Message);
 
             return true;
         }
@@ -145,11 +145,17 @@ namespace RetroLite.RetroCore
 
         private bool _setPixelFormat(RetroPixelFormat* pixelFormat)
         {
+//            if (*pixelFormat != RetroPixelFormat.F_0RGB1555)
+//            {
+//                return false;
+//            }
+            
             if (_pixelFormat != *pixelFormat)
             {
                 _pixelFormat = *pixelFormat;
                 _videoContextUpdated = true;
             }
+
             return true;
         }
 
@@ -196,19 +202,36 @@ namespace RetroLite.RetroCore
 
         private bool _getVariable(RetroVariable* variablePtr)
         {
-            Logger.Debug($"Core asking for variable {(*variablePtr).Key}");
+            var key = variablePtr->Key;
+            
+            Logger.Debug($"Core asking for variable {key}");
 
-            if (!_coreVariables.ContainsKey((*variablePtr).Key))
+            if (!_coreVariables.ContainsKey(key))
             {
-                RetroCore.Logger.Warn("Variable not set: {0}", (*variablePtr).Key);
+                if (key == "beetle_psx_renderer")
+                {
+                    variablePtr->value = Marshal.StringToHGlobalAnsi("software");
+                    return true;
+                }
+
+                _core.RetroGetSystemInfo(out var info);
+                Logger.Warn("Variable not set: {0}", (*variablePtr).Key);
                 return false;
             }
+            
+            var variable = _coreVariables[variablePtr->Key];
 
-//            (*variablePtr).value = IntPtr.Zero;
-//
-//            return true;
+            if (key == "beetle_psx_cd_access_method")
+            {
+                variablePtr->value = Marshal.StringToHGlobalAnsi("async");
+                return true;
+            }
+            
+            variablePtr->value = Marshal.StringToHGlobalAnsi(variable.Value);
+            
+            Logger.Debug($"Returned {variable.Value}");
 
-            return false;
+            return true;
         }
 
         private bool _setVariables(RetroVariable* variables)
