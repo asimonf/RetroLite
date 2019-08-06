@@ -208,11 +208,6 @@ namespace RetroLite.RetroCore
 
             if (!_coreVariables.ContainsKey(key))
             {
-                if (key == "beetle_psx_renderer")
-                {
-                    variablePtr->value = Marshal.StringToHGlobalAnsi("software");
-                    return true;
-                }
 
                 _core.RetroGetSystemInfo(out var info);
                 Logger.Warn("Variable not set: {0}", (*variablePtr).Key);
@@ -220,14 +215,8 @@ namespace RetroLite.RetroCore
             }
             
             var variable = _coreVariables[variablePtr->Key];
-
-            if (key == "beetle_psx_cd_access_method")
-            {
-                variablePtr->value = Marshal.StringToHGlobalAnsi("async");
-                return true;
-            }
             
-            variablePtr->value = Marshal.StringToHGlobalAnsi(variable.Value);
+            variablePtr->value = Marshal.StringToHGlobalAnsi(variable.Value.Trim());
             
             Logger.Debug($"Returned {variable.Value}");
 

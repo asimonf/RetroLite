@@ -15,33 +15,6 @@ namespace RetroLite.Menu
         )
         {
             _renderer = renderer;
-            _renderer.OnVideoSet += RendererOnOnVideoSet;
-            _texture = _renderer.CreateTexture(
-                SDL.SDL_PIXELFORMAT_ARGB8888,
-                SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-                _renderer.Width,
-                _renderer.Height
-            );
-            _renderer.SetTextureBlendMode(_texture, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-        }
-
-        private void RendererOnOnVideoSet(int newwidth, int newheight, float newrefreshrate, IRenderer self)
-        {
-            lock (_renderer.Sync)
-            {
-                if (_texture != IntPtr.Zero)
-                {
-                    _renderer.FreeTexture(_texture);                    
-                }
-                
-                _texture = self.CreateTexture(
-                    SDL.SDL_PIXELFORMAT_ARGB8888,
-                    SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-                    self.Width,
-                    self.Height
-                );
-                self.SetTextureBlendMode(_texture, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-            }
         }
 
         protected override bool GetViewRect(CefBrowser browser, ref CefRectangle rect)
@@ -57,13 +30,6 @@ namespace RetroLite.Menu
             var length = width * height * 4;
 
             if (_texture == IntPtr.Zero) return;
-            
-            lock (_renderer.Sync)
-            {
-                _renderer.LockTexture(_texture, out var pixels, out var pitch);
-                Buffer.MemoryCopy(buffer.ToPointer(), pixels.ToPointer(), length, length);
-                _renderer.UnlockTexture(_texture);                
-            }
         }
 
         protected override CefAccessibilityHandler GetAccessibilityHandler()
@@ -94,12 +60,10 @@ namespace RetroLite.Menu
         
         public void Draw()
         {
-            _renderer.RenderCopy(_texture);
         }
 
         public void Dispose()
         {
-           _renderer.FreeTexture(_texture);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -31,6 +31,11 @@ namespace RetroLite.Scene
         private readonly float[] _tmpAudioBuffer;
 
         private readonly Stopwatch _nopTimer;
+        
+        private readonly GameControllerButton[] _buttons;
+        private bool wasPressed = false;
+        private int vmode = 0;
+
 
         public SceneManager(
             IRenderer renderer, 
@@ -42,7 +47,10 @@ namespace RetroLite.Scene
             EventBus eventBus
         )
         {
+            _buttons = (GameControllerButton[])Enum.GetValues(typeof(GameControllerButton));
+
             _renderer = renderer;
+            _renderer.Initialize();
             _inputProcessor = inputProcessor;
             _eventProcessor = eventProcessor;
 
@@ -79,7 +87,9 @@ namespace RetroLite.Scene
             
             stateManager.Initialize();
             stateManager.ScanForGames();
-            var game = stateManager.GetGameById("240pTestSuitePS1");
+//            var game = stateManager.GetGameById("240pSuite");
+            var game = stateManager.GetGameById("Megaman X6");
+//            var game = stateManager.GetGameById("R.P.M. Racing (Japan)");
             eventBus.Publish(new LoadGameEvent(game));
         }
 
@@ -111,6 +121,7 @@ namespace RetroLite.Scene
             _renderer.RenderClear();
             foreach (var scene in _scenes)
                 scene.Draw();
+            _renderer.RenderWaitForVsync();
             _renderer.RenderPresent();
         }
 

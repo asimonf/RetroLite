@@ -7,6 +7,7 @@ namespace LibArvid
     {
         public enum VideoModeShort: short
         {
+            Invalid = -1,
             Arvid320 = 0,
             Arvid256 = 1,
             Arvid288 = 2,
@@ -25,20 +26,21 @@ namespace LibArvid
         
         public enum VideoModeInt: int
         {
-                Arvid320 = 0,
-                Arvid256 = 1,
-                Arvid288 = 2,
-                Arvid384 = 3,
-                Arvid240 = 4,
-                Arvid392 = 5,
-                Arvid400 = 6,
-                Arvid292 = 7,
-                Arvid336 = 8,
-                Arvid416 = 9,
-                Arvid448 = 10,
-                Arvid512 = 11,
-                Arvid640 = 12,
-                Count = 12
+            Invalid = -1,
+            Arvid320 = 0,
+            Arvid256 = 1,
+            Arvid288 = 2,
+            Arvid384 = 3,
+            Arvid240 = 4,
+            Arvid392 = 5,
+            Arvid400 = 6,
+            Arvid292 = 7,
+            Arvid336 = 8,
+            Arvid416 = 9,
+            Arvid448 = 10,
+            Arvid512 = 11,
+            Arvid640 = 12,
+            Count = 12
         }
         
         public enum BlitType: int

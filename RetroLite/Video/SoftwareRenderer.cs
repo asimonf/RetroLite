@@ -3,7 +3,7 @@ using SDL2;
 
 namespace RetroLite.Video
 {
-    public class SoftwareRenderer : IRenderer
+    public class SoftwareRenderer
     {
         private readonly IntPtr _sdlWindow;
         private readonly IntPtr _sdlRenderer;

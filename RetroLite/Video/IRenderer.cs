@@ -8,12 +8,12 @@ namespace RetroLite.Video
     public interface IRenderer : IDisposable
     {
         int Width { get; }
-        int Height { get; set; }
+        int Height { get; }
+        int Lines { get; }
         float RefreshRate { get; }
+        bool Initialized { get; }
 
-        event OnVideoSetHandler OnVideoSet;
-        
-        object Sync { get; }
+        void Initialize();
 
         IntPtr LoadTextureFromFile(string path);
         IntPtr CreateTexture(uint format, SDL.SDL_TextureAccess access, int width, int height);
@@ -41,13 +41,12 @@ namespace RetroLite.Video
         void RenderCopySrc(IntPtr texture, ref SDL.SDL_Rect src);
         void RenderPresent();
 
+        void RenderWaitForVsync();
+
         bool SetRenderDrawBlendMode(SDL.SDL_BlendMode mode);
         bool SetTextureBlendMode(IntPtr texture, SDL.SDL_BlendMode mode);
 
-        void Screenshot();
-
-        void SetTitleText(string title);
-
+        void SetMode(int width, int height);
         void SetMode(int width, int height, float refreshRate);
 
         void SetInterlacing(bool interlacing);

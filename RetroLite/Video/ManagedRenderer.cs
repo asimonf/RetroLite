@@ -4,7 +4,7 @@ using SDL2;
 
 namespace RetroLite.Video
 {
-    public class ManagedRenderer: IRenderer
+    public class ManagedRenderer
     {
         private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
         
@@ -19,10 +19,10 @@ namespace RetroLite.Video
             get => _surfaceRenderer?.Height ?? 0;
             set
             {
-                if (_surfaceRenderer != null)
-                {
-                    _surfaceRenderer.Height = value;
-                }
+//                if (_surfaceRenderer != null)
+//                {
+//                    _surfaceRenderer.Height = value;
+//                }
             }
         }
 
@@ -150,7 +150,7 @@ namespace RetroLite.Video
 
             lock (Sync)
             {
-                var newRenderer = new SurfaceRenderer(width, height, refreshRate);
+                var newRenderer = new SurfaceRenderer();
             
                 _logger.Info(
                     "Video-Mode set to {width}x{height}@{refreshRate}",

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -42,8 +42,8 @@ namespace RetroLite.RetroCore
         private IntPtr _frameField;
         private int _framebufferWidth, _framebufferHeight;
         private bool _videoContextUpdated;
-        private bool _interlacing = false;
-        private bool _isOddField = false;
+        private bool _interlacing;
+        private bool _isOddField;
         
         #endregion
 
@@ -202,6 +202,93 @@ namespace RetroLite.RetroCore
         }
 
         #region Core Callbacks
+
+//        private unsafe void _render(
+//            IntPtr data, 
+//            uint width, 
+//            uint height, 
+//            ulong pitch, 
+//            uint bytesPerPixel, 
+//            byte* destinationPtr
+//        )
+//        {
+//            var destinationPitch = bytesPerPixel * width;
+//            var sourcePtr = (byte*)data.ToPointer();
+//
+//            if (destinationPitch != pitch)
+//            {
+//                for (ulong i = 0; i < height; i++)
+//                {
+//                    Buffer.MemoryCopy(
+//                        sourcePtr + i * pitch,
+//                        destinationPtr + i * destinationPitch, 
+//                        destinationPitch,
+//                        destinationPitch
+//                    );
+//                }
+//            }
+//            else
+//            {
+//                Buffer.MemoryCopy(
+//                    sourcePtr, 
+//                    destinationPtr, 
+//                    height * pitch, 
+//                    height * pitch
+//                );
+//            }
+//        } 
+//        
+//        private unsafe void _render16bit(IntPtr data, uint width, uint height, ulong pitch)
+//        {
+//            fixed (ushort* destinationPtr = &_framebuffer16bit[0])
+//                _render(data, width, height, pitch, 4, (byte*)destinationPtr);
+//
+//            // Convert color depth to 15 bit
+//            for (var i = 0; i < _framebufferHeight; i++)
+//            {
+//                for (var j = 0; j < _framebufferWidth; j++)
+//                {
+//                    var pos = i * _framebufferHeight + j;
+//                    var srcPixel = _framebuffer16bit[pos];
+//
+//                    var R = (srcPixel & 0xF800) >> 11;
+//                    var G = (srcPixel & 0x07E0) >> 5;
+//                    var B = srcPixel & 0x001F;
+//
+//                    var dstPixel = (ushort)(R | ((G * 2 + 1) >> 2) << 5 | B);
+//
+//                    _framebuffer15bit[pos] = dstPixel;
+//                }
+//            }
+//        }
+//        
+//        private unsafe void _render32bit(IntPtr data, uint width, uint height, ulong pitch)
+//        {
+//            fixed (uint* destinationPtr = &_framebuffer32bit[0])
+//                _render(data, width, height, pitch, 4, (byte*)destinationPtr);
+//
+//            // Convert color depth to 15 bit
+//            for (var i = 0; i < _framebufferHeight; i++)
+//            {
+//                for (var j = 0; j < _framebufferWidth; j++)
+//                {
+//                    var pos = i * _framebufferHeight + j;
+//                    var srcPixel = _framebuffer32bit[pos];
+//
+//                    var R = (srcPixel & 0xFF0000) >> 16;
+//                    var G = (srcPixel & 0x00FF00) >> 8;
+//                    var B = srcPixel & 0x0000FF;
+//
+//                    var dstPixel = (ushort)(
+//                        ((R * 249 + 1024) >> 11) << 10 |
+//                        ((G * 249 + 1024) >> 11) << 5  |
+//                        ((B * 249 + 1024) >> 11)
+//                    );
+//
+//                    _framebuffer15bit[pos] = dstPixel;
+//                }
+//            }
+//        }
 
         private void _videoRefresh(IntPtr data, uint width, uint height, ulong pitch)
         {
@@ -449,7 +536,14 @@ namespace RetroLite.RetroCore
             {
                 if (!_interlacing)
                 {
-                    _renderer.RenderCopy(_framebuffer);                    
+                    var destRect = new SDL.SDL_Rect()
+                    {
+                        h = _framebufferHeight,
+                        w = _framebufferWidth,
+                        x = 0,
+                        y = 0
+                    };
+                    _renderer.RenderCopyDest(_framebuffer, ref destRect);                    
                 }
                 else
                 {
@@ -460,7 +554,7 @@ namespace RetroLite.RetroCore
 
                         for (var i = 0; i < _renderer.Height; i++)
                         {
-                            var originScanline = !_isOddField ? i * 2 : i * 2 + 1;
+                            var originScanline = _isOddField ? i * 2 : i * 2 + 1;
                         
                             Buffer.MemoryCopy(
                                 (byte*)framebufferPixels.ToPointer() + originScanline * framebufferPitch, 
@@ -477,7 +571,15 @@ namespace RetroLite.RetroCore
                     }
 
                     _isOddField = !_isOddField;
-                    _renderer.RenderCopy(_frameField);
+                    
+                    var destRect = new SDL.SDL_Rect()
+                    {
+                        h = _framebufferHeight >> 1,
+                        w = _framebufferWidth,
+                        x = 0,
+                        y = 0
+                    };
+                    _renderer.RenderCopyDest(_frameField, ref destRect);
                 }
             }
         }
@@ -626,6 +728,9 @@ namespace RetroLite.RetroCore
                     format = SDL.SDL_PIXELFORMAT_RGB565;
                     break;
             }
+            
+            _isOddField = false;
+            _interlacing = _framebufferHeight >= _renderer.Lines;
 
             _framebuffer = _renderer.CreateTexture(
                 format,
@@ -633,26 +738,15 @@ namespace RetroLite.RetroCore
                 _framebufferWidth,
                 _framebufferHeight
             );
-
-            _isOddField = false;
+            _frameField = _renderer.CreateTexture(
+                format,
+                SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
+                _framebufferWidth,
+                _framebufferHeight >> 1
+            );
             
-            if (_framebufferHeight > 300)
-            {
-                _interlacing = true;
-                _renderer.Height = _framebufferHeight / 2;
-                
-                _frameField = _renderer.CreateTexture(
-                    format,
-                    SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-                    _framebufferWidth,
-                    _renderer.Height
-                );
-            }
-            else
-            {
-                _interlacing = false;
-                _renderer.Height = _framebufferHeight;
-            }
+            _renderer.SetTextureBlendMode(_framebuffer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            _renderer.SetTextureBlendMode(_frameField, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             
             Logger.Info(
                 "New FB Size: {0}x{1} mode: {2}", 
@@ -661,9 +755,8 @@ namespace RetroLite.RetroCore
                 !_interlacing ? "Progressive" : "Interlaced"
             );
             
+            _renderer.SetMode(_framebufferWidth, _interlacing ? _framebufferHeight >> 1 : _framebufferHeight);
             _renderer.SetInterlacing(_interlacing);
-
-            _renderer.SetTextureBlendMode(_framebuffer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
         }
         #endregion
 

@@ -68,6 +68,15 @@ namespace RetroLite
                 {
                     Logger.Error(new Exception("TTF Initialization error"));
                 }
+                
+                SDL.SDL_CreateWindow(
+                    "RetroLite", 
+                    SDL.SDL_WINDOWPOS_UNDEFINED, 
+                    SDL.SDL_WINDOWPOS_UNDEFINED, 
+                    320, 
+                    240, 
+                    SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS
+                );
 
                 // Container
                 using (var container = SetupContainer(cefMainArgs, cefApp))
@@ -110,7 +119,7 @@ namespace RetroLite
             );
 
             // Register renderer (TODO: maybe make it configurable?)
-            container.Register<IRenderer, ManagedRenderer>(Lifestyle.Singleton);
+            container.Register<IRenderer, SurfaceRenderer>(Lifestyle.Singleton);
 
             // Register main components
             container.RegisterSingleton<InputProcessor>();
@@ -122,6 +131,7 @@ namespace RetroLite
             container.RegisterSingleton<EventBus>();
             container.RegisterSingleton<Config>();
             container.RegisterSingleton<RetroCoreFactory>();
+            container.RegisterSingleton<RawRenderer>();
 
             // Register Scenes
 //            container.Collection.Register<IScene>(Assembly.GetExecutingAssembly());

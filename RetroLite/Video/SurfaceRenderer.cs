@@ -10,83 +10,61 @@ namespace RetroLite.Video
     {
         private readonly IntPtr _sdlSurface;
         private readonly IntPtr _sdlRenderer;
+        private ushort[] _tempDestination;
 
-        public int Height { get; set; }
-        public int Width { get; }
-        public float RefreshRate { get; }
+        public int Height { get; private set; }
+        public int Width { get; private set; }
+        public int Lines { get; private set; }
+        public float RefreshRate { get; private set; }
         
-        public event OnVideoSetHandler OnVideoSet;
+        public bool Interlacing { get; private set; }
         
-        public object Sync { get; }
-
-        public SurfaceRenderer(int width, int height, float refreshRate)
+        public bool Initialized { get; private set; }
+        
+        public ArvidClient.ArvidClientVmodeInfo[] ModeInfos { get; private set; }
+        
+        public SurfaceRenderer()
         {
-            Width = width;
-            Height = height;
-            RefreshRate = SetArvidMode(width, height, refreshRate);
-            Sync = new object();
-
-                _sdlSurface = SDL.SDL_CreateRGBSurfaceWithFormat(
+            Initialized = false;
+            
+            _sdlSurface = SDL.SDL_CreateRGBSurfaceWithFormat(
                 0, 
-                Width, 
-                Height, 
+                640, 
+                240, 
                 16, 
                 SDL.SDL_PIXELFORMAT_RGB555
             );
-
+            
             if (_sdlSurface == null)
-            {
                 throw new Exception("SDL Software Surface Initialization Error");
-            }
 
             _sdlRenderer = SDL.SDL_CreateSoftwareRenderer(_sdlSurface);
 
             if (_sdlRenderer == null)
-            {
                 throw new Exception("SDL Renderer Initialization Error");
-            }
+
+            _tempDestination = new ushort[640 * 240];
         }
 
-        private unsafe float SetArvidMode(int width, int height, float refreshRate)
+        public void Initialize()
         {
-            if (ArvidClient.IsConnected)
+            if (Initialized) return;
+            
+            unsafe
             {
+                int count;
                 var vmodeInfos = new ArvidClient.ArvidClientVmodeInfo[20];
-
                 fixed (ArvidClient.ArvidClientVmodeInfo* vmodesInfosPtr = vmodeInfos)
-                {
-                    var count = ArvidClient.arvid_client_enum_video_modes(vmodesInfosPtr, 20);
-                    
-                    Console.WriteLine(count);
-
-                    for (var i = 0; i < count; i++)
-                    {
-                        if (vmodesInfosPtr[i].width != (ushort) width) continue;
-
-                        var mode = (ArvidClient.VideoModeInt) vmodesInfosPtr[i].vmode;
-
-                        var lines = ArvidClient.arvid_client_get_video_mode_lines(mode, refreshRate);
-                        
-                        if (lines < 0) throw new Exception("Could not find a mode that satisfies the selected refresh rate");
-
-                        var res = ArvidClient.arvid_client_set_video_mode(mode, lines);
-                        
-                        if (res < 0) throw new Exception("Unable to set Arvid Mode");
-
-                        res = ArvidClient.arvid_client_set_blit_type(ArvidClient.BlitType.Blocking);
-                        
-                        if (res < 0) throw new Exception("Unable to set Arvid Blit Type");
-
-                        var finalRefreshRate = ArvidClient.arvid_client_get_video_mode_refresh_rate(mode, lines);
-                        
-                        if (finalRefreshRate < 0) throw new Exception("Unable to get final refresh rate");
-
-                        return finalRefreshRate;
-                    }
-                }
+                    count = ArvidClient.arvid_client_enum_video_modes(vmodesInfosPtr, 20);
+                
+                ModeInfos = new ArvidClient.ArvidClientVmodeInfo[count];
+                Array.Copy(vmodeInfos, ModeInfos, count);
             }
+            
+            var res = ArvidClient.arvid_client_set_blit_type(ArvidClient.BlitType.NonBlocking);
+            if (res < 0) throw new Exception("Unable to set Arvid Blit Type");
 
-            throw new Exception("Not connected to Arvid");
+            Initialized = true;
         }
 
         public void Dispose()
@@ -157,14 +135,7 @@ namespace RetroLite.Video
 
         public void RenderCopy(IntPtr texturePtr)
         {
-            var destRect = new SDL.SDL_Rect()
-            {
-                h = Height,
-                w = Width,
-                x = 0,
-                y = 0
-            };
-            SDL.SDL_RenderCopy(_sdlRenderer, texturePtr, IntPtr.Zero, ref destRect);
+            SDL.SDL_RenderCopy(_sdlRenderer, texturePtr, IntPtr.Zero, IntPtr.Zero);
         }
 
         public void RenderPresent()
@@ -177,29 +148,41 @@ namespace RetroLite.Video
 
                 unsafe
                 {
-                    var surface = (SDL.SDL_Surface*)_sdlSurface.ToPointer();
-                    ArvidClient.arvid_client_wait_for_vsync();
-                    var res = ArvidClient.arvid_client_blit_buffer(
-                        (ushort*)surface->pixels,
-                        Width,
-                        Height,
-                        surface->pitch / 2
-                    );
-
-                    if (res != 0)
+                    fixed (ushort* tempDestPtr = &_tempDestination[0])
                     {
-                        throw new Exception("Error blitting to arvid");
-                    }
+                        var surface = (SDL.SDL_Surface*)_sdlSurface.ToPointer();
+                        for (var i = 0; i < Height; i++)
+                        {
+                            Buffer.MemoryCopy(
+                                (ushort*)(surface->pixels + i * surface->pitch),
+                                tempDestPtr + i * Width,
+                                Width * 2,
+                                Width * 2
+                            );
+                        }
+
+                        var res = ArvidClient.arvid_client_blit_buffer(
+                            tempDestPtr,
+                            Width,
+                            Height,
+                            Width
+                        );
+
+                        if (res != 0)
+                            throw new Exception("Error blitting to arvid");
+                    }                    
                 }
+                
             }
             finally
             {
                 SDL.SDL_UnlockSurface(_sdlSurface);
-            }                
+            }
         }
-
-        public void Screenshot()
+        
+        public void RenderWaitForVsync()
         {
+            ArvidClient.arvid_client_wait_for_vsync();
         }
         
         public bool SetRenderDrawBlendMode(SDL.SDL_BlendMode mode)
@@ -211,19 +194,64 @@ namespace RetroLite.Video
         {
             return SDL.SDL_SetTextureBlendMode(texture, mode) == 0;
         }
-
-        public void SetTitleText(string title)
+        
+        private ArvidClient.VideoModeInt _findVideoMode(int width)
         {
-            
-        }
+            for (var i = 0; i < ModeInfos.Length; i++)
+            {
+                if (ModeInfos[i].width != (ushort) width) continue;
 
+                return (ArvidClient.VideoModeInt) ModeInfos[i].vmode;
+            }
+
+            return ArvidClient.VideoModeInt.Invalid;
+        }
+        
         public void SetMode(int width, int height, float refreshRate)
         {
+            Width = width;
+            Height = height;
+            var selectedMode = _findVideoMode(width);
             
+            Lines = ArvidClient.arvid_client_get_video_mode_lines(selectedMode, refreshRate);
+            if (Lines < 0) throw new Exception("Could not find a mode that satisfies the selected refresh rate");
+
+            var res = ArvidClient.arvid_client_set_video_mode(selectedMode, Lines);
+            if (res < 0) throw new Exception("Unable to set Arvid Mode");
+            
+            RefreshRate = ArvidClient.arvid_client_get_video_mode_refresh_rate(selectedMode, Lines);
+            if (RefreshRate < 0) throw new Exception("Unable to get final refresh rate");
+            
+//            if (IntPtr.Zero != _tempDestination) FreeTexture(_tempDestination);
+//            _tempDestination = CreateTexture(
+//                SDL.SDL_PIXELFORMAT_RGB555,
+//                SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
+//                Width,
+//                Height
+//            );
+        }
+        
+        public void SetMode(int width, int height)
+        {
+            Width = width;
+            Height = height;
+            var selectedMode = _findVideoMode(width);
+
+            var res = ArvidClient.arvid_client_set_video_mode(selectedMode, Lines);
+            if (res < 0) throw new Exception("Unable to set Arvid Mode");
+            
+//            if (IntPtr.Zero != _tempDestination) FreeTexture(_tempDestination);
+//            _tempDestination = CreateTexture(
+//                SDL.SDL_PIXELFORMAT_RGB555,
+//                SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
+//                Width,
+//                Height
+//            );
         }
 
         public void SetInterlacing(bool interlacing)
         {
+            Interlacing = interlacing;
             ArvidClient.arvid_client_set_interlacing((short)(interlacing ? 1 : 0));
         }
     }
