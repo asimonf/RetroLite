@@ -61,7 +61,7 @@ namespace RetroLite.Video
                 Array.Copy(vmodeInfos, ModeInfos, count);
             }
             
-            var res = ArvidClient.arvid_client_set_blit_type(ArvidClient.BlitType.NonBlocking);
+            var res = ArvidClient.arvid_client_set_blit_type(ArvidClient.BlitType.Blocking);
             if (res < 0) throw new Exception("Unable to set Arvid Blit Type");
 
             Initialized = true;
@@ -213,7 +213,7 @@ namespace RetroLite.Video
             Height = height;
             var selectedMode = _findVideoMode(width);
             
-            Lines = ArvidClient.arvid_client_get_video_mode_lines(selectedMode, refreshRate);
+            Lines = ArvidClient.arvid_client_get_video_mode_lines(selectedMode, refreshRate) - 1;
             if (Lines < 0) throw new Exception("Could not find a mode that satisfies the selected refresh rate");
 
             var res = ArvidClient.arvid_client_set_video_mode(selectedMode, Lines);
@@ -222,13 +222,9 @@ namespace RetroLite.Video
             RefreshRate = ArvidClient.arvid_client_get_video_mode_refresh_rate(selectedMode, Lines);
             if (RefreshRate < 0) throw new Exception("Unable to get final refresh rate");
             
-//            if (IntPtr.Zero != _tempDestination) FreeTexture(_tempDestination);
-//            _tempDestination = CreateTexture(
-//                SDL.SDL_PIXELFORMAT_RGB555,
-//                SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-//                Width,
-//                Height
-//            );
+            ArvidClient.arvid_client_set_virtual_vsync(Height - 15);
+            
+            Console.WriteLine("{0}x{1}@{2}. Asked for {3}", Width, Height, RefreshRate, refreshRate);
         }
         
         public void SetMode(int width, int height)
@@ -239,6 +235,8 @@ namespace RetroLite.Video
 
             var res = ArvidClient.arvid_client_set_video_mode(selectedMode, Lines);
             if (res < 0) throw new Exception("Unable to set Arvid Mode");
+            
+            ArvidClient.arvid_client_set_virtual_vsync(Height - 15);
             
 //            if (IntPtr.Zero != _tempDestination) FreeTexture(_tempDestination);
 //            _tempDestination = CreateTexture(

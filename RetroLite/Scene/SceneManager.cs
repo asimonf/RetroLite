@@ -90,7 +90,10 @@ namespace RetroLite.Scene
 //            var game = stateManager.GetGameById("240pSuite");
             var game = stateManager.GetGameById("Megaman X6");
 //            var game = stateManager.GetGameById("R.P.M. Racing (Japan)");
+//            var game = stateManager.GetGameById("Super Mario World 2 - Yoshi's Island (USA) (Rev 1)");
             eventBus.Publish(new LoadGameEvent(game));
+            
+            
         }
 
         public void Dispose()
@@ -117,7 +120,7 @@ namespace RetroLite.Scene
 
         private void Draw()
         {
-            _renderer.SetRenderDrawColor(0, 0, 0, 255);
+            _renderer.SetRenderDrawColor(0, 0, 0, 0);
             _renderer.RenderClear();
             foreach (var scene in _scenes)
                 scene.Draw();
@@ -127,15 +130,25 @@ namespace RetroLite.Scene
 
         public void RunLoop()
         {
-//            var frameStart = Stopwatch.GetTimestamp();
+            var frameStart = Stopwatch.GetTimestamp();
             HandleEvents();
             Update();
             Draw();
-//            var frameTicks = Stopwatch.GetTimestamp() - frameStart;
-//            var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
-//            var targetFrametime = (1000.0 / _config.TargetFps);
+            var frameTicks = Stopwatch.GetTimestamp() - frameStart;
+            var elapsedTime = frameTicks * (1000.0 / Stopwatch.Frequency);
+            var refreshRate = 1000.0 / elapsedTime;
+
+//            if (refreshRate < _renderer.RefreshRate)
+//            {
+//            }
+//            var targetFrametime = (1000.0 / _renderer.RefreshRate);
 //            
 //            if (!(targetFrametime > elapsedTime)) return;
+//            
+//            if (elapsedTime >= targetFrametime)
+//            {
+//                Console.Write('.');
+//            }
 //
 //            var sleepTime = (int) (targetFrametime - elapsedTime) - 1;
 //

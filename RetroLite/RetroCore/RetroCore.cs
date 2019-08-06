@@ -185,7 +185,7 @@ namespace RetroLite.RetroCore
             GameLoaded = true;
             _core.RetroGetSystemAvInfo(out _currentSystemAvInfo);
             _renderer.SetMode(
-                (int)512,
+                (int)_currentSystemAvInfo.Geometry.BaseWidth,
                 (int)_currentSystemAvInfo.Geometry.BaseHeight,
                 (float)_currentSystemAvInfo.Timing.Fps
             );
